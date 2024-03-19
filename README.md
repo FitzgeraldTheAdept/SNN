@@ -1,2 +1,3 @@
 # SNN
-Spiking Neural Network Project for EE5800 Neuromorphic Robotic Systems
+Spiking Neural Network Project for EE5900 Neuromorphic Robotic Systems
+
