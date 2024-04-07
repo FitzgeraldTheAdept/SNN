@@ -62,8 +62,12 @@ class Network(object):
             # connect all the input and pain neurons to the first hidden layer, if it exists
             self.fillConnects(neurons[0], neurons[2])
             self.fillConnects(neurons[1], neurons[2])
-            pass
 
+            # fill in the rest of the layers
+            layer = 2 # 0th hidden layer
+            while layer - 1 < numHideLays:
+                self.fillConnects(neurons[layer], neurons[layer + 1])
+                layer = layer + 1
 
         return neurons
     
