@@ -3,6 +3,7 @@
 # IEEE Transactions on neural networks 14.6 (2003): 1569-1572
 
 from math import pow
+import random
 #from synapse import Synapse
 # Would really like to have the above line but for whatever reason we get a circular import
 
@@ -35,10 +36,12 @@ class Neuron(object):
     
     """     Public Functions    """
     def step(self, t : int, dt : float):
-        # time step for the neuron, update the model
-        # inputs: 
-        #       t = time index
-        #      dt = time step (in ms)
+        """
+            Time step for the neuron, update model variables
+            Inputs: 
+                t = time index (integer)
+               dt = time step (in ms)
+        """
 
         I = self._calcI(self) # Calculates injected current 
         vnow = self.v[t] # current membrane potential
@@ -53,8 +56,9 @@ class Neuron(object):
         if self.v[-1] >= 30:
             self.v[-1] = self.params['c']
             self.u = self.u + self.params['d']
+            self.spikes.append(t)
 
-        pass
+        
 
     def regSynapse(self, syn, IO : int):
         """
@@ -80,14 +84,16 @@ class Neuron(object):
         # inputs:
         #       toNeuron = neuron object to connect with
         #       prePost  = 0 for this neuron being the presynaptic, 1 for it being the post
+        random.seed(42)
+        maxWeight = 80 # This gives a refractory period of ~4 ms, which is about the max
         from synapse import Synapse
         if prePost == 0:
             # This neuron is the presynaptic
-            syn = Synapse(self, toNeuron, 0.5)
+            syn = Synapse(self, toNeuron, random.random() * maxWeight)
 
         elif prePost == 1:
             # This neuron is the postsynaptic 
-            syn = Synapse(toNeuron, self, 0.5)
+            syn = Synapse(toNeuron, self, random.random() * maxWeight)
 
         else:
             raise ValueError('Illegal prePost Value: must be 0 for pre- or 1 for post- synaptic')
