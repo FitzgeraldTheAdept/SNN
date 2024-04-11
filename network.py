@@ -96,7 +96,7 @@ class Network(object):
         """
         for i in self.neurons:
             print(len(i))
-        pass
+        
 
 
 def simTick():

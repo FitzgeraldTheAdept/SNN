@@ -4,6 +4,7 @@
 
 from math import pow
 import random
+import numpy
 #from synapse import Synapse
 # Would really like to have the above line but for whatever reason we get a circular import
 
@@ -18,7 +19,8 @@ class Neuron(object):
     params['d'] = 8
     
     def __init__(self, type : int):
-        self.v = []
+        self.v = numpy.array()
+        #self.v = list()
         self.v[0] = self.params['c']    # membrane potential in millivolts
         self.inSyns = set()             # input synapses
         self.outSyns = set()            # output synapses
