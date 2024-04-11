@@ -5,8 +5,14 @@
 from math import pow
 import random
 import numpy
+from synapse import maxWeight
 #from synapse import Synapse
 # Would really like to have the above line but for whatever reason we get a circular import
+
+_INPUT = 1
+_OUTPUT = 0
+_HIDDEN = 2
+_PAIN = -1
 
 class Neuron(object):
     #connects = []    # Neuron connections
@@ -26,27 +32,41 @@ class Neuron(object):
         self.outSyns = set()            # output synapses
         self.u = self.params['b'] * self.v
         self.type = type                # 0 = output, 1 = input, 2 = hidden, -1 = pain
+        
 
         self.spikes = list()            # list of times when a spike occurred
 
         return self
 
     """     Private Functions   """
-    def _calcI(self):
+    def _calcI(self, simStep : int, dt : float):
         # calculates the input current I based on the synapses
+        #for syn in self.inSyns:
+        #    syn.step
         return 10
     
     """     Public Functions    """
-    def step(self, t : int, dt : float):
+    def step(self, simStep : int, dt : float, I_in : float = 0):
         """
             Time step for the neuron, update model variables
             Inputs: 
-                t = time index (integer)
-               dt = time step (in ms)
+                simStep = simulation time index (integer)
+                dt      = time step (in ms)
+                I_in    = input current
         """
-
-        I = self._calcI(self) # Calculates injected current 
-        vnow = self.v[t] # current membrane potential
+        if self.type is _INPUT:
+            I = I_in
+        elif self.type is _PAIN:
+            I = I_in - 0.5 * maxWeight
+            """
+            if I_in > .5 * maxWeight:
+                I = I_in - 0.5 * maxWeight
+            else:
+                I = I_in
+            """
+        else:
+            I = self._calcI(self, simStep = simStep, dt = dt) # Calculates injected current 
+        vnow = self.v[simStep] # current membrane potential
         dv = (0.04 * pow(vnow,2) + 5 * vnow + 140 - self.u + I) * dt
         du = (self.params['a'] * (self.params['b']*vnow - self.u)) * dt
 
@@ -58,7 +78,7 @@ class Neuron(object):
         if self.v[-1] >= 30:
             self.v[-1] = self.params['c']
             self.u = self.u + self.params['d']
-            self.spikes.append(t)
+            self.spikes.append(simStep)
 
         
 
@@ -87,7 +107,7 @@ class Neuron(object):
         #       toNeuron = neuron object to connect with
         #       prePost  = 0 for this neuron being the presynaptic, 1 for it being the post
         random.seed(42)
-        maxWeight = 80 # This gives a refractory period of ~4 ms, which is about the max
+        
         from synapse import Synapse
         if prePost == 0:
             # This neuron is the presynaptic

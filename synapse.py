@@ -2,12 +2,14 @@
 from neuron import Neuron
 import numpy as np
 
+maxWeight = 80   # maximum synapse weight.  This gives a refractory period of ~4 ms
+
 class Synapse(object):
     
     def __init__(self, preNeuron : Neuron, postNeuron : Neuron, weight = float, ispike : np.array = None):
         self.pre = preNeuron        # Presynaptic Neuron
         self.post = postNeuron      # Postsynaptic Neuron
-        self.weight = weight        # Neuron Weight
+        self.weight = weight        # Synapse Weight
         self.curIStart = 0          # Time step index of start of the current I spike
         self.newIStart = 0          # Time step index of start of the most recent I spike
         if ispike is not None:
@@ -26,12 +28,16 @@ class Synapse(object):
         # return self
     
 
-    def calcStep(self):
+    def simStep(self):
         """
             Calculates the current for this synapse at this simulation step
         """
-        synI = self.pre.v 
-        pass
+        
+
+
+        # see if the previous neuron is a pain neuron
+        if self.pre.type is -1:
+            synI = -1
 
    
 

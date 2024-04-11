@@ -3,7 +3,6 @@ import math
 import matplotlib.pyplot as plt
 import funcs
 from neuron import Neuron
-from synapse import Synapse
 
 class Network(object):
     """
@@ -14,13 +13,18 @@ class Network(object):
         dt              - simulation time step dt (in ms)
         structure       - list containing number of neurons in each layer of the network.
                           [inputs, pain neurons, outputs, hidden layer 1, hidden layer 2,...]
+        t               - time vector for each phase
+        simStep         - Simulation step (which time index in vector t are we)
+        neurons         - 2D list of Neuron objects [inputs, pain, hl1, hl2, ..., output]
     """
-    def __init__(self, phaseDuration : int = 100, dt : float = 0.1, structure : list = [2, 1, 1]):
+    def __init__(self, phaseDuration : int = 100, dt : float = 0.1, structure : list = [2, 1, 1], simStep : int = 0):
         self.phaseDuration = phaseDuration
         self.dt            = dt
         self.structure     = structure
 
 
+        self.t             = list(map(lambda x: x * self.dt, range(0, int(self.phaseDuration / self.dt),1)))
+        self.simStep       = simStep
         self.neurons       = self.buildNetwork(self.structure)
 
     
@@ -96,6 +100,28 @@ class Network(object):
         """
         for i in self.neurons:
             print(len(i))
+
+    def step(self, I_in : list):
+        """
+            Advance the network 1 step in the simulation.
+            In other words, solve the whole network for the current simStep, then increment to the next step
+            Inputs:
+                I_in - currents derived from the input strength, list of flaots
+
+        """
+        while self.simStep < len(self.t):
+            
+            # Solve all the neurons, starting with the input layer and moving forward
+            for layer in self.neurons:
+                for neu in layer:
+                    neu.step(simStep = self.simStep, dt = self.dt )
+                    # Neurons will call synapses to find their current
+
+
+            # increment to next simulation step
+            self.simStep = self.simStep + 1
+        
+            
         
 
 
