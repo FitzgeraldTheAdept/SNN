@@ -18,8 +18,8 @@ def ispike(dt : float = 0.1 ):
             dt = time step (in ms)
     """
    
-    rt = 2
-    ft = 35
+    rt = 2        # Rise time in ms
+    ft = 35       # fall time in ms
     numConsts = 5 # Number of time constants
     rise_tau = rt/numConsts
     fall_tau = ft/numConsts

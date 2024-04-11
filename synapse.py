@@ -2,7 +2,7 @@
 from neuron import Neuron
 import numpy as np
 
-maxWeight = 80   # maximum synapse weight.  This gives a refractory period of ~4 ms
+maxI = 80   # maximum synapse current.  This gives a refractory period of ~4 ms
 
 class Synapse(object):
     
@@ -10,8 +10,6 @@ class Synapse(object):
         self.pre = preNeuron        # Presynaptic Neuron
         self.post = postNeuron      # Postsynaptic Neuron
         self.weight = weight        # Synapse Weight
-        self.curIStart = 0          # Time step index of start of the current I spike
-        self.newIStart = 0          # Time step index of start of the most recent I spike
         if ispike is not None:
             self.ispikeShape = ispike   # Shape of Current Spike
 
@@ -25,23 +23,37 @@ class Synapse(object):
             Sets Current Spike shape of this synapse
         """
         self.ispikeShape = ispike
-        # return self
+        
     
 
-    def simStep(self):
+    def step(self, simStep : int):
         """
             Calculates the current for this synapse at this simulation step
+            Inputs:
+                simStep - simulation time index
+            Outputs:
+                weighted current from this synapse (including negative if pain)
         """
-        
+        synI = 0
+        if not len(self.pre.spikes) is 0:
+            # retrieve spikes from the preneuron
+            for spike in self.pre.spikes:
+                if simStep - spike < len(self.ispikeShape):
+                    # Possible overlapping spikes
+                    # Find whichever current value in spike is strongest
+                    if self.ispikeShape[simStep-spike] > synI:
+                        synI = self.ispikeShape[simStep-spike]
 
-
-        # see if the previous neuron is a pain neuron
+        # see if the previous neuron is a pain neuron. If it is, current counts as a negative
         if self.pre.type is -1:
-            synI = -1
+            synI = -1 * synI
+
+        return synI * self.weight
 
    
 
     def _combineSpike(self, simTStep : int):
+        #### DEFUNCT? ####
         """
         Combine current spikes by taking previous spike and current spike current values 
         and "riding" whichever spike is larger.  I.e. look at the start time for those spikes

@@ -114,8 +114,8 @@ class Network(object):
             # Solve all the neurons, starting with the input layer and moving forward
             for layer in self.neurons:
                 for neu in layer:
-                    neu.step(simStep = self.simStep, dt = self.dt )
-                    # Neurons will call synapses to find their current
+                    neu.step(simStep = self.simStep, dt = self.dt, I_in = I_in )
+                    # Neurons will call synapses to find their input current
 
 
             # increment to next simulation step

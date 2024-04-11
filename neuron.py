@@ -5,7 +5,7 @@
 from math import pow
 import random
 import numpy
-from synapse import maxWeight
+from synapse import maxI
 #from synapse import Synapse
 # Would really like to have the above line but for whatever reason we get a circular import
 
@@ -40,10 +40,19 @@ class Neuron(object):
 
     """     Private Functions   """
     def _calcI(self, simStep : int, dt : float):
-        # calculates the input current I based on the synapses
-        #for syn in self.inSyns:
-        #    syn.step
-        return 10
+        """
+            Calculates the input current I based on the synapses.  Weighting happens in the synapses.
+            This will compute the sum of all the weighted inputs from the synapses
+        
+            Inputs:
+                simStep - simulation time index (timestamp)
+                dt      - time step in (ms)
+        """
+        totalI = 0
+        for syn in self.inSyns:
+            totalI = totalI + syn.step(simStep = simStep)
+        
+        return totalI
     
     """     Public Functions    """
     def step(self, simStep : int, dt : float, I_in : float = 0):
@@ -56,16 +65,18 @@ class Neuron(object):
         """
         if self.type is _INPUT:
             I = I_in
-        elif self.type is _PAIN:
-            I = I_in - 0.5 * maxWeight
-            """
-            if I_in > .5 * maxWeight:
-                I = I_in - 0.5 * maxWeight
-            else:
-                I = I_in
-            """
         else:
             I = self._calcI(self, simStep = simStep, dt = dt) # Calculates injected current 
+
+        if self.type is _PAIN:
+            I = I + I_in
+
+        # Saturation Check
+        if I < 0:
+            I = 0
+        if I > maxI:
+            I = maxI
+
         vnow = self.v[simStep] # current membrane potential
         dv = (0.04 * pow(vnow,2) + 5 * vnow + 140 - self.u + I) * dt
         du = (self.params['a'] * (self.params['b']*vnow - self.u)) * dt
@@ -102,20 +113,22 @@ class Neuron(object):
 
 
     def connect(self, toNeuron, prePost : int):
-        # registers a connection between this Neuron and another Neuron
-        # inputs:
-        #       toNeuron = neuron object to connect with
-        #       prePost  = 0 for this neuron being the presynaptic, 1 for it being the post
+        """
+            Registers a connection between this Neuron and another Neuron
+            Inputs:
+                toNeuron = neuron object to connect with
+                prePost  = 0 for this neuron being the presynaptic, 1 for it being the post
+        """
         random.seed(42)
         
         from synapse import Synapse
         if prePost == 0:
             # This neuron is the presynaptic
-            syn = Synapse(self, toNeuron, random.random() * maxWeight)
+            syn = Synapse(self, toNeuron, random.random() * maxI)
 
         elif prePost == 1:
             # This neuron is the postsynaptic 
-            syn = Synapse(toNeuron, self, random.random() * maxWeight)
+            syn = Synapse(toNeuron, self, random.random() * maxI)
 
         else:
             raise ValueError('Illegal prePost Value: must be 0 for pre- or 1 for post- synaptic')
