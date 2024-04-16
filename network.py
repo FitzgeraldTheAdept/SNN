@@ -60,23 +60,27 @@ class Network(object):
         # add in the outputs as the last layer
         neurons.append(Outs)
 
+        # define the spike shape
+        ispikeTotal = funcs.ispike(dt=self.dt)
+        ispikeshape = ispikeTotal['current']
+
         # connect all the input neurons to the pain neurons
-        self.fillConnects(neurons[0], neurons[1])
+        self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1], ispike=ispikeshape)
         
         if numHideLays > 0:
             # connect all the input and pain neurons to the first hidden layer, if it exists
-            self.fillConnects(neurons[0], neurons[2])
-            self.fillConnects(neurons[1], neurons[2])
+            self.fillConnects(fromLayer=neurons[0], toLayer=neurons[2], ispike=ispikeshape)
+            self.fillConnects(fromLayer=neurons[1], toLayer=neurons[2], ispike=ispikeshape)
 
             # fill in the rest of the layers
             layer = 2 # 0th hidden layer
             while layer - 1 < numHideLays:
-                self.fillConnects(neurons[layer], neurons[layer + 1])
+                self.fillConnects(fromLayer=neurons[layer], toLayer=neurons[layer + 1], ispike=ispikeshape)
                 layer = layer + 1
 
         return neurons
     
-    def fillConnects(self, fromLayer : list, toLayer : list):
+    def fillConnects(self, fromLayer : list, toLayer : list, ispike : list):
         """
             initializes all connections from neurons in fromLayer to neurons in toLayer
 

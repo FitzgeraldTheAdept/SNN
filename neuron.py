@@ -39,7 +39,7 @@ class Neuron(object):
         
 
     """     Private Functions   """
-    def _calcI(self, simStep : int, dt : float):
+    def _calcI(self, simStep : int, dt : float = 0.1):
         """
             Calculates the input current I based on the synapses.  Weighting happens in the synapses.
             This will compute the sum of all the weighted inputs from the synapses
@@ -112,23 +112,24 @@ class Neuron(object):
             raise ValueError('Illegal value for IO: must be 1 (if neuron is postsynaptic) or 0 (presynaptic)')
 
 
-    def connect(self, toNeuron, prePost : int):
+    def connect(self, toNeuron, prePost : int, ispike : list):
         """
             Registers a connection between this Neuron and another Neuron
             Inputs:
                 toNeuron = neuron object to connect with
                 prePost  = 0 for this neuron being the presynaptic, 1 for it being the post
         """
-        random.seed(42)
+        #random.seed(42)
+        # seed set outside this function
         
         from synapse import Synapse
         if prePost == 0:
             # This neuron is the presynaptic
-            syn = Synapse(self, toNeuron, random.random() * maxI)
+            syn = Synapse(self, toNeuron, random.random() * maxI, ispike=ispike)
 
         elif prePost == 1:
             # This neuron is the postsynaptic 
-            syn = Synapse(toNeuron, self, random.random() * maxI)
+            syn = Synapse(toNeuron, self, random.random() * maxI, ispike=ispike)
 
         else:
             raise ValueError('Illegal prePost Value: must be 0 for pre- or 1 for post- synaptic')

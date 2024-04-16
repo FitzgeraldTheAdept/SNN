@@ -74,6 +74,23 @@ def _test_ispike(dt : float = 0.1):
     plt.show()
 
 
+def floatRange(start : float, end : float, delta : float):
+    """
+        Like range but for floats
+    """
+    num = int((end - start)/delta)
+    y = np.empty(num)
+    y[0] = start
+    for i in range(1, num - 1):
+        y[i] = y[i-1] + delta
+
+    y[-1] = end
+
+    return y
+
+
 if __name__ == "__main__":
     _test_ispike()
+
+
 

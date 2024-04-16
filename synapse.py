@@ -45,8 +45,8 @@ class Synapse(object):
                 if simStep - spike < len(self.ispikeShape):
                     # Possible overlapping spikes
                     # Find whichever current value in spike is strongest
-                    if self.ispikeShape[simStep-spike] > synI:
-                        synI = self.ispikeShape[simStep-spike]
+                    if spike <= simStep and self.ispikeShape[int(simStep-spike)] > synI:
+                        synI = self.ispikeShape[int(simStep-spike)]
 
         # see if the previous neuron is a pain neuron. If it is, current counts as a negative
         if self.pre.type == -1:
@@ -67,3 +67,21 @@ class Synapse(object):
         """
         
         pass
+
+    def adjust(self, lr : float, strength : float):
+        """
+            Adjusts the weight of the synapse, for training.
+            Inputs:
+                lr       - learning Rate
+                strength - correlation value telling how strongly to increase (positive) or decrease (negative) the weight
+
+            Outputs:
+                The adjusted weight value, in addition to adjusting the synapse weight
+        """
+        self.weight = self.weight + lr * strength
+
+        if self.weight > maxI:
+            # Weight saturated
+            self.weight = maxI
+
+        return self.weight
