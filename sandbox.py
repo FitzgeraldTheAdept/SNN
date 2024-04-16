@@ -3,18 +3,26 @@ Test file (for running random code bits before chucking into the rest of the pro
 """
 
 # importing libraries
+from synapse import Synapse
 from timeit import default_timer as timer
 import itertools
 import random
 from neuron import Neuron
+import numpy as np
 
 # Function under evaluation
 def test_func(test_set):
 	# x = lambda val: val
 	x = lambda val: other_func(val)
-	[map(x, test_set)]
+	return map(x, test_set)
 	#for val in test_set:
 	#	_ = val
+ 
+def test_func2(test_set):
+	x = list(test_set)
+	y = np.add(x, 1)
+	return y
+		
 
 def other_func(val : int):  
 	return val + 1
@@ -32,14 +40,23 @@ def timeTest():
 			test_set.add(el)
 
 		start = timer()
-		test_func(test_set)
+		out = list(test_func(test_set))
 		end = timer()
 
+
 		print(str(end - start))
+
+		start = timer()
+		out = test_func2(test_set)
+		end = timer()
+		print(str(end-start))
+		# print(out[0])
 		
 # Driver function
 if __name__ == '__main__':
-    test = [Neuron] * 10
+    timeTest()
+
+
 
     #print(test[1].params['c'])
 	

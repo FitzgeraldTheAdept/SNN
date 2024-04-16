@@ -41,6 +41,7 @@ class Network(object):
         numIns      = structure[0]
         numPains    = structure[1]
         numOuts     = structure[2]
+        
         # find the number of hidden layers
         numHideLays = len(structure) - 3
 

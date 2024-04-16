@@ -1,8 +1,12 @@
 # This file contains the synapse class
+
+maxI = 80   # maximum synapse current.  This gives a refractory period of ~4 ms
+
+
 from neuron import Neuron
 import numpy as np
 
-maxI = 80   # maximum synapse current.  This gives a refractory period of ~4 ms
+
 
 class Synapse(object):
     
@@ -16,7 +20,7 @@ class Synapse(object):
         # register with the neurons
         self.pre.regSynapse(self,0)
         self.post.regSynapse(self,1)    
-        return self
+        
     
     def setISpike(self, ispike : np.array):
         """
@@ -35,7 +39,7 @@ class Synapse(object):
                 weighted current from this synapse (including negative if pain)
         """
         synI = 0
-        if not len(self.pre.spikes) is 0:
+        if len(self.pre.spikes) != 0:
             # retrieve spikes from the preneuron
             for spike in self.pre.spikes:
                 if simStep - spike < len(self.ispikeShape):
@@ -45,7 +49,7 @@ class Synapse(object):
                         synI = self.ispikeShape[simStep-spike]
 
         # see if the previous neuron is a pain neuron. If it is, current counts as a negative
-        if self.pre.type is -1:
+        if self.pre.type == -1:
             synI = -1 * synI
 
         return synI * self.weight

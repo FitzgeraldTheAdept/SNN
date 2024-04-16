@@ -25,7 +25,7 @@ class Neuron(object):
     params['d'] = 8
     
     def __init__(self, type : int):
-        self.v = numpy.array()
+        self.v = numpy.empty(1)
         #self.v = list()
         self.v[0] = self.params['c']    # membrane potential in millivolts
         self.inSyns = set()             # input synapses
@@ -36,7 +36,7 @@ class Neuron(object):
 
         self.spikes = list()            # list of times when a spike occurred
 
-        return self
+        
 
     """     Private Functions   """
     def _calcI(self, simStep : int, dt : float):
