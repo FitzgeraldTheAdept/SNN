@@ -68,11 +68,11 @@ def neuCalcI():
     out_a = Neuron(type=_OUTPUT)
 
     # Set the random number generator seed for the initial synapse weights
-    random.seed(42)
+    random.seed(41)
 
     # generate spike shape
-    d_t = 0.1
-    i_spike_total = funcs.ispike(dt = d_t)
+    d_t = 0.01
+    i_spike_total = funcs.ispike(dt = d_t, holdTime = 2)
     i_spike_shape = i_spike_total['current']
 
     # Connect neurons, generate synapse weights
@@ -83,13 +83,13 @@ def neuCalcI():
     random.seed(21)
     t = funcs.floatRange(0, 100, d_t)
     T = len(t)
-    spike_chance = 0.01 # chance of spike, 0.3 = 30%
+    spike_chance = 0.001 # chance of spike, 0.3 = 30%
 
     s1 = np.empty(T)
     s2 = np.empty(T)
     spikes1 = list()
     spikes2 = list()
-    for i in range(0, T - 1):
+    for i in range(0, T):
         # Define random spike timings
         s1[i] = math.floor(random.random() + spike_chance)
         s2[i] = math.floor(random.random() + spike_chance)
@@ -114,11 +114,11 @@ def neuCalcI():
 
     # Check the current through the synapse from in_a to out_a
     in_a_syns = list(in_a.outSyns)
+    in_b_syns = list(in_b.outSyns)
     syn = in_a_syns[0]
     syn_I = np.empty(T)
     for i in range(0, T):
         syn_I[i] = syn.step(i)
-
         
     # plot the current 
     plt.figure()
@@ -127,8 +127,128 @@ def neuCalcI():
     plt.ylabel("Current (I)")
     plt.title("in_a to out_b synapse current")
     plt.grid()
+
+    neu_I = np.empty(T)
+    # neu_v = np.empty(T)
+    # Run the neuron calcI across the time steps
+    for i in range(0, T):
+        neu_I[i] = out_a._calcI(simStep=i, dt=d_t)
+        out_a.step(simStep=i, dt=d_t )
+
+    print(f"{in_b_syns[0].weight}")      
+    print(f"{in_a_syns[0].weight}")     
+
+    # plot the current 
+    plt.figure()
+    plt.plot(range(0, T), neu_I, 'r.' )
+    plt.xlabel("Time Step")
+    plt.ylabel("Current (I)")
+    plt.title("out_a neuron input current")
+    plt.grid()
+   
+    
+    plt.figure()
+    plt.plot(range(0,T), out_a.v[1:len(out_a.v)])
+    plt.xlabel("Time Step")
+    plt.ylabel("Voltage (V)")
+    plt.title("out_a neuron output Voltage")
+    plt.grid()
     plt.show()
-    pass
+
+
+def inTest():
+    """
+        Test to see if input neurons work
+    """
+    # initialize neurons
+    in_a = Neuron(type=_INPUT)
+    in_b = Neuron(type=_INPUT)
+    out_a = Neuron(type=_OUTPUT)
+
+    # Set the random number generator seed for the initial synapse weights
+    random.seed(41)
+
+    # generate spike shape
+    d_t = 0.01
+    i_spike_total = funcs.ispike(dt = d_t)
+    i_spike_shape = i_spike_total['current']
+
+    # Connect neurons, generate synapse weights
+    in_a.connect(toNeuron=out_a, prePost=0, weight=20.0, ispike=i_spike_shape)
+    in_b.connect(toNeuron=out_a, prePost=0, weight=20.0, ispike=i_spike_shape)
+
+    # Make time series data
+    t = funcs.floatRange(0, 100, d_t)
+    T = len(t)
+
+    # start stepping the network
+    for simStep in range(0, T):
+        # Step the input neurons with input currents defined 
+        in_a.step(simStep=simStep, dt = d_t, I_in = 20)
+        in_b.step(simStep=simStep, dt = d_t, I_in = 30)
+        
+        # Step the output neurons
+        out_a.step(simStep=simStep, dt = d_t)
+    
+    # Plot the time series data with membrane voltage
+    plt.figure()
+    plt.plot(t, out_a.v[1:len(out_a.v)], 'r-')
+    plt.plot(t, in_a.v[1:len(in_a.v)], 'b-')
+    plt.plot(t, in_b.v[1:len(in_b.v)], 'g-')
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Membrane Voltage (V)")
+    plt.title("Neuron Voltages")
+    plt.legend(["Output", "Input A", "Input B"])
+    plt.grid()
+    plt.show()
+
+""" PAIN TESTS """
+def painI():
+    """
+        Test for Pain neurons
+        - Check model output with two input connections, one pain and one input
+    """
+    # initialize neurons
+    in_a = Neuron(type=_INPUT)
+    in_b = Neuron(type=_PAIN)
+    out_a = Neuron(type=_OUTPUT)
+
+    # Set the random number generator seed for the initial synapse weights
+    random.seed(41)
+
+    # generate spike shape
+    d_t = 0.01
+    i_spike_total = funcs.ispike(dt = d_t, rt = 2, ft = 50, holdTime=2)
+    i_spike_shape = i_spike_total['current']
+
+    # Connect neurons, generate synapse weights
+    in_a.connect(toNeuron=out_a, prePost=0, weight=20.0, ispike=i_spike_shape)
+    in_b.connect(toNeuron=out_a, prePost=0, weight=20.0, ispike=i_spike_shape)
+
+    # Make time series data
+    t = funcs.floatRange(0, 100, d_t)
+    T = len(t)
+
+    # start stepping the network
+    for simStep in range(0, T):
+        # Step the input neurons with input currents defined 
+        in_a.step(simStep=simStep, dt = d_t, I_in = 30)
+        in_b.step(simStep=simStep, dt = d_t, I_in = 20)
+        
+        # Step the output neurons
+        out_a.step(simStep=simStep, dt = d_t)
+    
+    # Plot the time series data with membrane voltage
+    plt.figure()
+    plt.plot(t, out_a.v[1:len(out_a.v)], 'r-')
+    plt.plot(t, in_a.v[1:len(in_a.v)], 'b-')
+    plt.plot(t, in_b.v[1:len(in_b.v)], 'g-')
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Membrane Voltage (V)")
+    plt.title("Neuron Voltages")
+    plt.legend(["Output", "Normal Input", "Pain Input"])
+    plt.grid()
+    plt.show()
 
 """ SYNAPSE TESTS """
 def synInit():
@@ -137,7 +257,9 @@ def synInit():
 
 if __name__ == "__main__":
     # Test to Run
-    neuCalcI()
+    #neuCalcI()
+    #inTest()
+    painI()
     pass
 
 

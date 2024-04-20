@@ -25,12 +25,12 @@ class Neuron(object):
     params['d'] = 8
     
     def __init__(self, type : int):
-        self.v = numpy.empty(1)
+        self.v = list()
         #self.v = list()
-        self.v[0] = self.params['c']    # membrane potential in millivolts
+        self.v.append(self.params['c']) # membrane potential in millivolts
         self.inSyns = set()             # input synapses
         self.outSyns = set()            # output synapses
-        self.u = self.params['b'] * self.v
+        self.u = self.params['b'] * self.v[0]
         self.type = type                # 0 = output, 1 = input, 2 = hidden, -1 = pain
         
 
@@ -66,7 +66,7 @@ class Neuron(object):
         if self.type is _INPUT:
             I = I_in
         else:
-            I = self._calcI(self, simStep = simStep, dt = dt) # Calculates injected current 
+            I = self._calcI(simStep = simStep, dt = dt) # Calculates injected current 
 
         if self.type is _PAIN:
             I = I + I_in
@@ -112,7 +112,7 @@ class Neuron(object):
             raise ValueError('Illegal value for IO: must be 1 (if neuron is postsynaptic) or 0 (presynaptic)')
 
 
-    def connect(self, toNeuron, prePost : int, ispike : list):
+    def connect(self, toNeuron, prePost : int, ispike : list, weight : float = -256):
         """
             Registers a connection between this Neuron and another Neuron
             Inputs:
@@ -121,15 +121,22 @@ class Neuron(object):
         """
         #random.seed(42)
         # seed set outside this function
+
         
         from synapse import Synapse
         if prePost == 0:
             # This neuron is the presynaptic
-            syn = Synapse(self, toNeuron, random.random() * maxI, ispike=ispike)
+            if weight == -256:
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=random.random() * maxI, ispike=ispike)
+            else:
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
 
         elif prePost == 1:
             # This neuron is the postsynaptic 
-            syn = Synapse(toNeuron, self, random.random() * maxI, ispike=ispike)
+            if weight == -256:
+                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight= random.random() * maxI, ispike=ispike)
+            else:
+                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight=weight, ispike=ispike)
 
         else:
             raise ValueError('Illegal prePost Value: must be 0 for pre- or 1 for post- synaptic')

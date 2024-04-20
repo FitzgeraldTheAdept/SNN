@@ -10,7 +10,7 @@ import numpy as np
 
 class Synapse(object):
     
-    def __init__(self, preNeuron : Neuron, postNeuron : Neuron, weight = float, ispike : np.array = None):
+    def __init__(self, preNeuron : Neuron, postNeuron : Neuron, weight : float, ispike : np.array = None):
         self.pre = preNeuron        # Presynaptic Neuron
         self.post = postNeuron      # Postsynaptic Neuron
         self.weight = weight        # Synapse Weight
