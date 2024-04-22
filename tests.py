@@ -252,7 +252,7 @@ def painI():
     plt.grid()
     plt.show()
 
-def painIntoPain():
+def InIntoPain():
     """
         Test for Pain neurons
         - Input coupled to pain, both coupled to output
@@ -337,8 +337,8 @@ if __name__ == "__main__":
     #neuCalcI()
     #inTest()
     #painI()
-    #painIntoPain()
-    imgVis()
+    InIntoPain()
+    #imgVis()
     pass
 
 
