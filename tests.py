@@ -1,6 +1,8 @@
 from synapse import Synapse
 from neuron import Neuron
 import funcs
+from PIL.Image import Image 
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -304,12 +306,39 @@ def synInit():
     test_pre_neu = Neuron(type=_INPUT)
     test_syn = Synapse()
 
+
+""" DATA TESTS """
+def imgVis():
+    
+    try:
+        f = open("data/test.json")
+    except Exception as e:
+        raise e
+
+    data = json.load(f)
+    f.close()
+    numImgs = data['Num Images']
+    imgs = data['Images']
+    random.seed()
+    imgInd = math.floor(numImgs * random.random() - 1)
+    img = np.resize(imgs[imgInd][0], (2,2) )
+    img = img/100
+    
+    plt.figure()
+    #plt.plot([0,1], [1, 1])
+    plt.imshow(1-img, cmap=plt.get_cmap('Greys'), interpolation='nearest',
+               vmin=0, vmax=1)
+    plt.show()
+    print(img)
+    
+
 if __name__ == "__main__":
     # Test to Run
     #neuCalcI()
     #inTest()
     #painI()
-    painIntoPain()
+    #painIntoPain()
+    imgVis()
     pass
 
 

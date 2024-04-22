@@ -54,7 +54,11 @@ def timeTest():
 		
 # Driver function
 if __name__ == '__main__':
-    timeTest()
+    #timeTest()
+
+	from matplotlib import colormaps
+	print(list(colormaps))
+	
 
 
 

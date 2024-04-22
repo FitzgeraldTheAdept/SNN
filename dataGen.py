@@ -4,7 +4,7 @@
 #   Testing
 #   Validation
 #
-# Training Data is 4 pixel square images.  Effectively it's just four values 0-1 in a list here
+# Training Data is 4 pixel square images.  Effectively it's just four values 0-100 in a list here
 # 
 # example_image = [A, B, C, D] => A B
 #                                 C D
@@ -18,8 +18,8 @@ _VBAR = 2   # type code for vertical bars
 _HBAR = 3   # type code for horizontal bars
 
 
-offThresh = 0.25 # Maximum brightness value to be considered off
-onThresh = 0.5 # Minimum brightness value to be considered on
+offThresh = 25 # Maximum brightness value to be considered off
+onThresh = 50 # Minimum brightness value to be considered on
 # Anything between offThresh and onThresh is illegal
 
 def buildImg(A : int, B : int, C : int, D : int) -> list:
@@ -29,30 +29,31 @@ def buildImg(A : int, B : int, C : int, D : int) -> list:
         value of 0 indicates pixel is off
     """
     if A == 1:
-        Alim = [onThresh, 1]
+        Alim = [onThresh, 100]
     else:
         Alim = [0, offThresh]
 
     if B == 1:
-        Blim = [onThresh, 1]
+        Blim = [onThresh, 100]
     else:
         Blim = [0, offThresh]
 
     if C == 1:
-        Clim = [onThresh, 1]
+        Clim = [onThresh, 100]
     else:
         Clim = [0, offThresh]
 
     if D == 1:
-        Dlim = [onThresh, 1]
+        Dlim = [onThresh, 100]
     else:
         Dlim = [0, offThresh]
     imgs = list()
-    for A in funcs.floatRange(Alim[0], Alim[1], 1/50):
-        for B in funcs.floatRange(Blim[0], Blim[1], 1/50):
-            for C in funcs.floatRange(Clim[0], Clim[1], 1/50):
-                for D in funcs.floatRange(Dlim[0], Dlim[1], 1/50):
-                    imgs.append([A, B, C, D])
+    testRes = 2
+    for A in range(Alim[0], Alim[1], testRes):
+        for B in range(Blim[0], Blim[1], testRes):
+            for C in range(Clim[0], Clim[1], testRes):
+                for D in range(Dlim[0], Dlim[1], testRes):
+                    imgs.append([int(A), int(B), int(C), int(D)])
 
     return imgs
 
@@ -153,6 +154,10 @@ if __name__ == "__main__":
     hBars = buildHorzBars()
     print("Built Horizontal Bars")
 
+    
+    # Write to JSON file
+    path = './data/'
+    """
     # Create output dictionary for json file
     allImgs = dict()
     allImgs['Num Crosses'] = len(crosses)
@@ -162,12 +167,12 @@ if __name__ == "__main__":
     allImgs['Num HBars'] = len(hBars)
     allImgs['HBars'] = hBars
 
-    # Write to JSON file
-    path = './data/'
+    
    
     # write to file
     with open('{}{}.json'.format(path,"allImages"), 'w') as f:
         json.dump(allImgs, f)
+    """
 
     # Create validation, testing, and training datasets
     # 60, 20, 20 split
@@ -180,8 +185,11 @@ if __name__ == "__main__":
     # Add the stuff to the sets
     # Importantly, this list will be sorted by category.  It's important to access this randomly when actually using
     buildSets(train=training, test=testing, valid=validation, fromList=crosses, type=_CROSS)
+    print("Built Cross set")
     buildSets(train=training, test=testing, valid=validation, fromList=vBars, type=_VBAR)
+    print("Built Vertical Bar set")
     buildSets(train=training, test=testing, valid=validation, fromList=hBars, type=_HBAR)
+    print("Built Horizontal Bar set")
 
     # Create dictionaries
     testDict = dict()
@@ -200,10 +208,16 @@ if __name__ == "__main__":
     with open('{}{}.json'.format(path,"train"), 'w') as f:
         json.dump(trainDict, f)
 
+    print('Wrote to {}{}.json'.format(path,"train"))
+
      # Print Testing data to file
     with open('{}{}.json'.format(path,"test"), 'w') as f:
         json.dump(testDict, f)
+    
+    print('Wrote to {}{}.json'.format(path,"test"))
 
      # Print Validation data to file
     with open('{}{}.json'.format(path,"valid"), 'w') as f:
         json.dump(validDict, f)
+
+    print('Wrote to {}{}.json'.format(path,"valid"))

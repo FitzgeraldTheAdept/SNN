@@ -49,10 +49,10 @@ Thumbs.db
 *.wmv
 
 # Training Data files
-data/allImages.json
-data/test.json
-data/train.json
-data/valid.json
+#data/allImages.json
+#data/test.json
+#data/train.json
+#data/valid.json
 
-*.json
+#*.json
 
