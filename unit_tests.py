@@ -1,3 +1,4 @@
+
 from synapse import Synapse
 from neuron import Neuron
 import funcs
@@ -7,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import math
+import trainer
 
 _INPUT = 1
 _OUTPUT = 0
@@ -474,6 +476,74 @@ def activityCalcDependent():
 
     plt.show()
 
+def hebTest():
+    """
+        Test Hebbian Learning Rules
+    """
+    """
+        Test of shared activity calculator
+            - One input coupled to one output
+    """
+    # initialize Dependent neurons
+    in_a = Neuron(type=_INPUT)
+    out_a = Neuron(type=_OUTPUT)
+    pain_a = Neuron(type=_PAIN)
+
+
+    ########## Simulation parameters ##########
+    # Sim time parameters
+    phaseDur = 300  # phase duration in ms
+    ignoreDur = 20  # Time in ms to allow model to settle before checking activity
+    d_t      = 0.01 # time step in ms
+
+    # spike shape parameters
+    rt       = 2    # rise time in ms
+    ft       = 50   # fall time in ms
+    ht       = 2    # holdTime at peak in ms
+
+    # Neuron current input values
+    a_input = 12
+    b_input = 30 # pain input
+
+    # Generate spike shape
+    i_spike_total = funcs.ispike(dt = d_t, rt = rt, ft = ft, holdTime=ht)
+    i_spike_shape = i_spike_total['current']
+
+    ########## Simulation Connection ##########
+    # Connect input to output neuron
+    in_a.connect(toNeuron=out_a, prePost=0, weight=10, ispike=i_spike_shape)
+    pain_a.connect(toNeuron=out_a, prePost=0, weight=10, ispike=i_spike_shape)
+    
+    # Make time series data
+    t = funcs.floatRange(0, phaseDur, d_t)
+    T = len(t)
+
+    ######## Simulation Start ########
+    # start stepping the network
+    for simStep in range(0, T):
+        # Step the input neuron with input current defined 
+        in_a.step(simStep=simStep, dt = d_t, I_in = a_input)
+        pain_a.step(simStep=simStep, dt=d_t, I_in = b_input)
+        
+        # Step the output neurons
+        out_a.step(simStep=simStep, dt = d_t)
+    
+    # Plot the time series data with membrane voltage
+    plt.figure()
+    # plt.plot(t, out_a.v[1:len(out_a.v)], 'r-')
+    plt.plot(t, in_a.v[1:len(in_a.v)], 'b-')
+    plt.plot(t, out_a.v[1:len(out_a.v)], 'g-')
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Membrane Voltage (V)")
+    plt.title("Neuron Voltages")
+    #plt.legend(["Output", "Normal Input", "Pain Input"])
+    plt.legend(["Normal Input", "Output"])
+    plt.grid()
+
+    res=list(map(lambda x : trainer.hebbian1(x, dt=d_t, phaseDur=phaseDur, ignoreDur=ignoreDur), in_a.outSyns))
+    print(res[0])
+    plt.show()
+
 """ SYNAPSE TESTS """
 def synInit():
     test_pre_neu = Neuron(type=_INPUT)
@@ -513,7 +583,8 @@ if __name__ == "__main__":
     # InIntoPain()
     #imgVis()
     # activityCalcIndependent()
-    activityCalcDependent()
+    # activityCalcDependent()
+    hebTest()
     pass
 
 
