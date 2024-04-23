@@ -89,7 +89,12 @@ class Neuron(object):
         if self.v[-1] >= 30:
             self.v[-1] = self.params['c']
             self.u = self.u + self.params['d']
-            self.spikes.append(simStep)
+            if len(self.spikes) == 0:
+                self.spikes.append(simStep)
+            
+            elif self.spikes[-1] < simStep - 4 / dt:
+                # Count only the first spike.  This is to combat model instability
+                self.spikes.append(simStep)
 
         
 
