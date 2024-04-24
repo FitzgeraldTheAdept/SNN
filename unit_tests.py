@@ -574,6 +574,8 @@ def imgVis():
     plt.show()
     print(img)
     
+""" TRAINER TESTS """
+
 
 if __name__ == "__main__":
     # Test to Run

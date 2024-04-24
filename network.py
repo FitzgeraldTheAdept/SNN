@@ -17,17 +17,34 @@ class Network(object):
         simStep         - Simulation step (which time index in vector t are we)
         neurons         - 2D list of Neuron objects [inputs, pain, hl1, hl2, ..., output]
     """
-    def __init__(self, phaseDuration : int = 100, dt : float = 0.1, structure : list = [2, 1, 1], simStep : int = 0):
-        self.phaseDuration = phaseDuration
-        self.dt            = dt
-        self.structure     = structure
+    def __init__(self, 
+                 path : str = None,
+                 phaseDuration : int = 100, 
+                 dt : float = 0.1, 
+                 structure : list = [2, 1, 1], 
+                 simStep : int = 0):
+        if path is None:
+            # build a new network
+            self.phaseDuration = phaseDuration
+            self.dt            = dt
+            self.structure     = structure
 
-
-        self.t             = list(map(lambda x: x * self.dt, range(0, int(self.phaseDuration / self.dt),1)))
-        self.simStep       = simStep
-        self.neurons       = self.buildNetwork(self.structure)
+            self.t             = list(map(lambda x: x * self.dt, range(0, int(self.phaseDuration / self.dt),1)))
+            self.simStep       = simStep
+            self.neurons       = self.buildNetwork(self.structure)
+        else:
+            # load a network from file
+            self.loadNetwork(path=path)
 
     
+    def loadNetwork(self, path : str):
+        """ 
+            Load a network from a file
+            Intialize all synapses to weights in the file
+
+        """
+        pass
+
     def buildNetwork(self, structure : list):
         """
             Builds the network based on the structure
@@ -111,12 +128,13 @@ class Network(object):
         for i in self.neurons:
             print(len(i))
 
-    def step(self, I_in : list):
+    def phase(self, I_in : list, I_pain : list):
         """
-            Advance the network 1 step in the simulation.
+            Execute a phase
             In other words, solve the whole network for the current simStep, then increment to the next step
             Inputs:
-                I_in - currents derived from the input strength, list of flaots
+                I_in - currents derived from the input strength, list of floats
+                I_pain - currents to the pain neurons
 
         """
         while self.simStep < len(self.t):
@@ -124,22 +142,27 @@ class Network(object):
             # Solve all the neurons, starting with the input layer and moving forward
             for layer in self.neurons:
                 for neu in layer:
-                    neu.step(simStep = self.simStep, dt = self.dt, I_in = I_in )
-                    # Neurons will call synapses to find their input current
-
+                    if neu.type == 1:
+                        neu.step(simStep = self.simStep, dt = self.dt, I_in = I_in)
+                        
+                    elif neu.type == -1:
+                        # pain neuron
+                        neu.step(simStep = self.simStep, dt = self.dt, I_in = I_pain )
+                        # Neurons will check synapses to find their other input current
+                    else:
+                        # other neuron
+                        neu.step(simStep = self.simStep, dt = self.dt)
+                        # Neurons will check synapses to find their input current
 
             # increment to next simulation step
             self.simStep = self.simStep + 1
-        
-            
-        
 
-
-def simTick():
-    """
-        "Tick" the simulation one time step
-    """
-    pass
+    def adjustWeights(self):
+        """
+            Adjusts the weights of the network using hebbian learning rules in trainer file
+        
+        """
+        pass
 
 
 if __name__ == '__main__':

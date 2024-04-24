@@ -100,13 +100,40 @@ class Trainer(object):
         self.env = environment  # Environment to use for training
         self.dataPath = dataPath # path to training data
         
-        # data
+        # data - no access to the validation
         self.train = list()
         self.test = list()
-        self.valid = list()
-        self.dataNums = [_TRAIN, _TEST, _VALID] # number of images for each set (train, test, validation)
+        self.dataNums = [_TRAIN, _TEST] # number of images for each set (train, test)
+        self.error = list() # list storing average network error for each generation
 
         self._fetchData()
+
+    def trainNetwork(self, numGens : int = 100, backupGens : int = 20):
+        """
+            Actually train the network
+                - apply input signals
+                - propagate the network (run a phase)
+                - Check output against environment
+                - Calculate the pain currents from environment output
+                - apply the input signals and pain signals from environment
+                - Propagate the network again (run a phase)
+                - Have the network adjust weights
+                - Repeat for numGens
+                - save the network weights to a file every backupGens Generations
+                - Also save the network weights a file at the end
+
+            INPUTS:
+                numGens - number of generations to test against
+        """
+        pass
+
+    def adjustWeights(self):
+        """
+            Adjust the weights of the network using the hebbian learning rules 
+            - Might be moved inside the network object
+        """
+        pass
+
         
     def _getImg(self, whichSet : int) -> list:
         """
@@ -123,10 +150,8 @@ class Trainer(object):
             imgDat = self.train[imgInd] 
         elif whichSet == _TEST:
             imgDat = self.test[imgInd]
-        elif whichSet == _VALID:
-            imgDat = self.valid[imgInd]
         else:
-            e = Exception(f"{whichSet} Not a valid data set index.  Must be 0, 1, or 2 (train, test, or valid).")
+            e = Exception(f"{whichSet} Not a valid data set index for trainer.  Must be 0 or 1 (train or test).")
             raise e
 
         # training data has both ground truth value and image
@@ -135,11 +160,11 @@ class Trainer(object):
         # divide by 100, as pixel brightness generated as an int 0-100
         img = list(np.asarray(img) / 100)
 
-        # Retrieve the image truth value (what kind is it)
-
+        # Retrieve the image truth value (what kind is it). Convert
+        imgTruth = self._mapTruth(truthType = imgDat[1])
         
         # return the image itself and the truth value in a list
-        return [img, imgDat[1]]
+        return [img, imgTruth]
 
         
     def _mapTruth(self, truthType : int)-> int:
@@ -162,9 +187,6 @@ class Trainer(object):
         else:
             e = Exception(f"Image type ({truthType}) Not recognized.")
             raise e
-        
-
-        
 
     def _fetchData(self):
         """
@@ -189,6 +211,7 @@ class Trainer(object):
         except Exception as e:
             raise e
         
+        """ Trainer doesn't have access to validation data
         # Open the validation data file
         try:
             with open('{}{}.json'.format(self.dataPath, "valid"), 'r') as f:
@@ -197,8 +220,6 @@ class Trainer(object):
                 self.dataNums[2] = data['Num Images']
         except Exception as e:
             raise e
+        """
         
-    
-    
-
 
