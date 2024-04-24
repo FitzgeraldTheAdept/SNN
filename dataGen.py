@@ -13,9 +13,9 @@ import json
 import funcs
 import numpy as np
 
-_CROSS = 1  # type code for crosses
-_VBAR = 2   # type code for vertical bars
-_HBAR = 3   # type code for horizontal bars
+CROSS = 1  # type code for crosses
+VBAR = 2   # type code for vertical bars
+HBAR = 3   # type code for horizontal bars
 
 
 offThresh = 25 # Maximum brightness value to be considered off
@@ -184,11 +184,11 @@ if __name__ == "__main__":
 
     # Add the stuff to the sets
     # Importantly, this list will be sorted by category.  It's important to access this randomly when actually using
-    buildSets(train=training, test=testing, valid=validation, fromList=crosses, type=_CROSS)
+    buildSets(train=training, test=testing, valid=validation, fromList=crosses, type=CROSS)
     print("Built Cross set")
-    buildSets(train=training, test=testing, valid=validation, fromList=vBars, type=_VBAR)
+    buildSets(train=training, test=testing, valid=validation, fromList=vBars, type=VBAR)
     print("Built Vertical Bar set")
-    buildSets(train=training, test=testing, valid=validation, fromList=hBars, type=_HBAR)
+    buildSets(train=training, test=testing, valid=validation, fromList=hBars, type=HBAR)
     print("Built Horizontal Bar set")
 
     # Create dictionaries

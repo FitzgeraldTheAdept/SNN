@@ -70,9 +70,14 @@ class Network(object):
         if numHideLays > 0:
             # connect all the input and pain neurons to the first hidden layer, if it exists
             self.fillConnects(fromLayer=neurons[0], toLayer=neurons[2], ispike=ispikeshape)
-            self.fillConnects(fromLayer=neurons[1], toLayer=neurons[2], ispike=ispikeshape)
 
-            # fill in the rest of the layers
+            # connect pain neurons to all hidden layers
+            hlayer = 2 # 0th hidden layer
+            while hlayer - 1 < numHideLays: # account for 2 offset
+                self.fillConnects(fromLayer=neurons[1], toLayer=neurons[hlayer], ispike=ispikeshape)
+                hlayer = hlayer + 1
+
+            # fill in the rest of the layers as normal
             layer = 2 # 0th hidden layer
             while layer - 1 < numHideLays:
                 self.fillConnects(fromLayer=neurons[layer], toLayer=neurons[layer + 1], ispike=ispikeshape)
