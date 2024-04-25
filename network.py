@@ -499,9 +499,14 @@ class Network(object):
                 I_pain - currents to the pain neurons
 
         """
+        # reset all the neurons
+        for layer in self.neurons:
+            for neu in layer:
+                neu.reset()
+        
         self.simStep = 0 # reset
         scaled_Iin = list(np.asarray(I_in) * self.maxI)
-        print(f"Network: {scaled_Iin}") #DEBUG
+        
         if I_pain is not None:
             scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
         while self.simStep < len(self.t):
@@ -512,7 +517,7 @@ class Network(object):
                 i = 0
                 for neu in layer:
                     if neu.type == 1:
-                        
+                                                
                         neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Iin[i])
                         
                     elif neu.type == -1:
@@ -527,9 +532,12 @@ class Network(object):
                         neu.step(simStep = self.simStep, dt = self.dt)
                         # Neurons will check synapses to find their input current
                     i = i + 1
-
+                    
+            
             # increment to next simulation step
             self.simStep = self.simStep + 1
+              
+        
 
     def adjustWeights(self, lr : float):
         """
@@ -542,7 +550,7 @@ class Network(object):
         # Multiply that by the learning rate, adjust the weight by that much
         
         for lay in self.neurons:
-            # print("DEBUG NETWORK: ADJUSTING WEIGHTS")
+            
             for neu in lay:
                 neu.adjustWeights(lr, dt=self.dt, pD=self.phaseDuration, iDur=self.waitTime)
                 # also tries to adjust the output weights but it shouldn't be a problem
@@ -567,7 +575,7 @@ class Network(object):
                 outs.append(x.getAct(dt=self.dt, pD = self.phaseDuration, iDur = self.waitTime))
             
             # DEBUG
-            print(f"NETWORK getOuts(): {outs}")
+            
             return outs
         else:
             return None

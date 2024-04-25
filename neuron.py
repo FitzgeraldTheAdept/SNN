@@ -83,6 +83,7 @@ class Neuron(object):
         dv = (0.04 * pow(vnow,2) + 5 * vnow + 140 - self.u + I) * dt
         du = (self.params['a'] * (self.params['b']*vnow - self.u)) * dt
 
+
         # Adjust the variables
         self.v.append(vnow + dv)
         self.u = self.u + du
@@ -133,7 +134,7 @@ class Neuron(object):
         if prePost == 0:
             # This neuron is the presynaptic
             if weight == -256:
-                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=random.random() * self.mxI, ispike=ispike)
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.75*random.random() + 0.25) * self.mxI, ispike=ispike)
             else:
                 syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
 
@@ -167,9 +168,18 @@ class Neuron(object):
                 pD      - phase duration
                 iDur    - ignore duration
         """
-        # print("DEBUG NEURON: ADJUSTING WEIGHTS")
+        
         for syn in self.outSyns:
             syn.adjustWeight(lr, dt, pD, iDur)
+
+    def reset(self):
+        """
+            Reset after the simulation
+        """
+        self.spikes = list()
+        self.v = list()
+        self.v.append(self.params['c']) # membrane potential in millivolts
+        self.u = self.params['b'] * self.v[0]
         
 
     def getAct(self, dt : float, pD : int, iDur : int):

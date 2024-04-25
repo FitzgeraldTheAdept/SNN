@@ -143,7 +143,7 @@ class Synapse(object):
 
         self.weight = self.weight + lr * strength
 
-        # print(f"Adjusting weight of synapse {self} by {strength}.  New weight is {self.weight}") # DEBUG
+        
 
         # Handle weight saturation
         if self.weight > maxI:

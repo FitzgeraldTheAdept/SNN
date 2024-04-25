@@ -261,7 +261,7 @@ class Controller(object):
         for i in [0, 1]:
             for j in [0, 1]:
                 imgInd = int(numImgs * rng.random() - 1)
-                # print(f" VAL {imgs[imgInd][0]}")
+                
                 testVal = 1 - (np.asarray(imgs[imgInd][0]) / 100)
                 self.network.phase(I_in=testVal)
                 outs = self.network.getOuts()
@@ -281,6 +281,8 @@ class Controller(object):
                        
         
         plt.show()
+
+    
 
 if __name__ == "__main__":
     Controller()
