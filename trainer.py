@@ -89,7 +89,7 @@ class Trainer(object):
             Tests network and evaluates error
         """
         # fetch a random testing sample
-        sample = self.test(rng.random() * self.dataNums[_TEST])
+        sample = self.test[int(rng.random() * self.dataNums[_TEST-1])]
         img = list(np.asarray(sample[0]) / 100)
         truthType = self._mapTruth(truthType=sample[1])
 
@@ -111,7 +111,7 @@ class Trainer(object):
             Runs one generation on the network
         """
         # fetch a random training sample
-        sample = self.train(rng.random() * self.dataNums[_TRAIN])
+        sample = self.train[int(rng.random() * self.dataNums[_TRAIN-1])]
         img = list(np.asarray(sample[0]) / 100)
         truthType = self._mapTruth(truthType=sample[1])
         self.env.setTruth(truthType)

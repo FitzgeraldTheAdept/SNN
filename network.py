@@ -523,6 +523,7 @@ class Network(object):
                 I_pain - currents to the pain neurons
 
         """
+        self.simStep = 0 # reset
         scaled_Iin = list(np.asarray(I_in) * self.maxI)
         if I_pain is not None:
             scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
@@ -542,7 +543,7 @@ class Network(object):
                         if I_pain is not None:
                             neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Ipain[i])
                         else:
-                            neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Ipain[i])
+                            neu.step(simStep = self.simStep, dt = self.dt)
                         # Neurons will check synapses to find their other input current
                     else:
                         # other neuron
