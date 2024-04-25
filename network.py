@@ -1,9 +1,9 @@
 import numpy as np
-import math
 import random as rng
 import matplotlib.pyplot as plt
 import funcs
 from neuron import Neuron
+from funcs import hebbian1
 
 _INPUT = 1
 _OUTPUT = 0
@@ -514,7 +514,7 @@ class Network(object):
         for i in self.neurons:
             print(len(i))
 
-    def phase(self, I_in : list, I_pain : list):
+    def phase(self, I_in : list, I_pain : list = None):
         """
             Execute a phase (or a propagation).  
             In other words, solve the whole network for every simstep
@@ -524,7 +524,8 @@ class Network(object):
 
         """
         scaled_Iin = list(np.asarray(I_in) * self.maxI)
-        scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
+        if I_pain is not None:
+            scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
         while self.simStep < len(self.t):
 
             # Solve all the neurons, starting with the input layer and moving forward
@@ -538,7 +539,10 @@ class Network(object):
                         
                     elif neu.type == -1:
                         # pain neuron
-                        neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Ipain[i])
+                        if I_pain is not None:
+                            neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Ipain[i])
+                        else:
+                            neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Ipain[i])
                         # Neurons will check synapses to find their other input current
                     else:
                         # other neuron
@@ -549,12 +553,28 @@ class Network(object):
             # increment to next simulation step
             self.simStep = self.simStep + 1
 
-    def adjustWeights(self):
+    def adjustWeights(self, lr : float):
         """
             Adjusts the weights of the network using hebbian learning rules in trainer file
+            INPUTS:
+                lr - learning rate (on the order of 1)
         
         """
-        pass
+        # Go through each neuron in each layer, finding the hebbian coefficient of each synapse.  
+        # Multiply that by the learning rate, adjust the weight by that much
+        for lay in self.neurons:
+            for neu in lay:
+                # get all the output synapses
+                for syn in neu.outSyns:
+                    coef = hebbian1(syn=syn, dt=self.dt, phaseDur=self.phaseDuration, ignoreDur=20)
+                    syn.weight = syn.weight + lr * coef
+                    # handle saturations
+                    if syn.weight > self.maxI:
+                        syn.weight = self.maxI
+                    elif syn.weight < 0:
+                        syn.weight = 0
+         
+        
 
     def getOuts(self) -> list:
         """

@@ -2,11 +2,8 @@
 
 maxI = 80   # maximum synapse current.  This gives a refractory period of ~4 ms
 
-
-from neuron import Neuron
 import numpy as np
-
-
+from neuron import Neuron
 
 class Synapse(object):
     

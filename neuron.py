@@ -4,9 +4,7 @@
 
 from math import pow
 import random
-import numpy
-from synapse import maxI
-#from synapse import Synapse
+
 # Would really like to have the above line but for whatever reason we get a circular import
 
 _INPUT = 1
@@ -15,6 +13,7 @@ _HIDDEN = 2
 _PAIN = -1
 
 class Neuron(object):
+    
     #connects = []    # Neuron connections
     #pot = []            # membrane potential
     params = {}
@@ -63,6 +62,7 @@ class Neuron(object):
                 dt      = time step (in ms)
                 I_in    = input current
         """
+        from synapse import maxI
         if self.type is _INPUT:
             I = I_in
         else:
@@ -134,7 +134,7 @@ class Neuron(object):
                 weight = neuron weight
 
         """
-        
+        from synapse import maxI
         from synapse import Synapse
         if prePost == 0:
             # This neuron is the presynaptic

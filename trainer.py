@@ -1,12 +1,8 @@
 # Contains the network trainer and helper functions
-import funcs
+from math import modf
 import json
 import numpy as np
 import random as rng
-from network import Network
-from environment import Environment
-from neuron import Neuron
-from synapse import Synapse
 
 from dataGen import CROSS as _DGCROSS, HBAR as _DGHBAR, VBAR as _DGVBAR
 
@@ -19,96 +15,39 @@ _CROSS = 0
 _VBAR = 1
 _HBAR = 2
 
+#from network import Network as Net
 
-def hebbian1(syn : Synapse, dt : float = 0.01, phaseDur : int = 300, ignoreDur : int = 20) -> float:
-    """
-        Calculates a "Hebbian Coefficient", which ranges from -1.0 to 1.0 and quantifies how much
-        the synapse weight should be adjusted based on the correlation between the two neurons
-        
-        This uses both the correlation score, which quantifies causality from pre-> post, and the 
-        differences in rates between neuron 1 and neuron 2, to derive the Hebbian Coefficient
-
-        INPUTS:
-            - Synapse
-
-    """
-
-    preSpikes = syn.pre.spikes
-    postSpikes = syn.post.spikes
-    # Calculate the correlation between these two spiking signals
-    corr = funcs.actCompare(spikes1=preSpikes,
-                     spikes2=postSpikes,
-                     dt=dt,
-                     endTime=phaseDur,
-                     startTime=ignoreDur,
-                     maxDelay=35)
-    
-    # Also calculate the activity of each neuron separately
-    act1 = funcs.actQuant(spikes=preSpikes,
-                        dt = dt, 
-                        endTime= phaseDur, 
-                        startTime = ignoreDur)
-    
-    act2 = funcs.actQuant(spikes=postSpikes,
-                        dt = dt, 
-                        endTime= phaseDur, 
-                        startTime = ignoreDur)
-    
-    maxAct = (phaseDur - ignoreDur)/4 # 4 ms
-
-    # This is where hands are waved
-    # See if either neurons was active enough
-    if act1 > 0.02 or act2 > 0.02:
-        actDif = act1 - act2 # activity difference
-
-        if actDif < 0 and corr > 0.5:
-            # Neuron 2 is more active than neuron 1
-            # BUT they have high correlation
-            # POSITIVE HEBBIAN COEFFICIENT
-            # proportional to how strongly correlated they are
-            # inversely proportional to activity of neuron 2 ?????
-            hebCoef = corr # / act2
-
-        elif actDif < 0 and corr <= 0.5:
-            # Neuron 2 is more active than neuron 1 
-            # AND they have low correlation
-            # NEGATIVE HEBBIAN COEFFICIENT
-            #hebCoef = actDif
-            hebCoef = corr - 1
-
-        elif actDif > 0 and corr > 0.5:
-            # Neuron 1 is more active than neuron 2
-            # BUT they have a high correlation score
-            # POSITIVE HEBBIAN COEFFICIENT
-            hebCoef = corr # / act1
-
-        elif actDif > 0 and corr <= 0.5:
-            # Neuron 1 is more active than neuron 2
-            # AND they have a low correlation score
-            # NEGATIVE HEBBIAN COEFFICIENT
-            #hebCoef = -1 * actDif
-            hebCoef = corr - 1
-        
-        return hebCoef
-
-    else:
-        return 0.0
-    
 class Trainer(object):
-    def __init__(self, network : Network, environment : Environment, dataPath : str = "./data/" ):
-        self.net = network      # neural network to trian
-        self.env = environment  # Environment to use for training
+    def __init__(self, 
+                 network : object, 
+                 dataPath : str = "./data/", 
+                 learnRate : float = 10,
+                 numGens : int = 20, # generations between testing epochs
+                 numEpochs : int = 10, # number of testing epochs for the test
+                 backupEpochs : int = 5, # number of epochs after which to save a copy of the network as is
+                 resPath : str = "trained" # name of trained network file saved at the end
+                 ):
+        self.net = network      # neural network to train
+
+        from environment import Environment
+        self.env = Environment(net=network)  # Environment to use for training
+
         self.dataPath = dataPath # path to training data
+        self.lr = learnRate
+        self.numGens = numGens
+        self.numEpochs = numEpochs
+        self.backupEpochs = backupEpochs
         
         # data - no access to the validation
         self.train = list()
         self.test = list()
         self.dataNums = [_TRAIN, _TEST] # number of images for each set (train, test)
-        self.error = list() # list storing average network error for each generation
+        self.error = list() # list storing average network error for each epoch
+        self.resPath = resPath
 
         self._fetchData()
 
-    def trainNetwork(self, numGens : int = 100, backupGens : int = 20):
+    def trainNetwork(self):
         """
             Actually train the network
                 - apply input signals
@@ -125,14 +64,69 @@ class Trainer(object):
             INPUTS:
                 numGens - number of generations to test against
         """
-        pass
+        for ep in range(0, self.numEpochs):
+            for gen in range(0, self.numGens):
+                self._generation()
+                print(f"Finished Epoch {ep} generation {gen}")
+            
+            print(f"Epoch {ep} finished.")
+            self._test()
+            print(f"MSE = {self.error[-1]}")
 
-    def adjustWeights(self):
+
+            (frac, whole) =modf(ep/self.backupEpochs)
+            if frac == 0:
+                print("Saving a backup.")
+                self.net.writeNetwork(path="backup.net")
+            
+        print("Training finished!")
+        self.net.writeNetwork(self.resPath + ".net")
+
+        
+    
+    def _test(self):
         """
-            Adjust the weights of the network using the hebbian learning rules 
-            - Might be moved inside the network object
+            Tests network and evaluates error
         """
-        pass
+        # fetch a random testing sample
+        sample = self.test(rng.random() * self.dataNums[_TEST])
+        img = list(np.asarray(sample[0]) / 100)
+        truthType = self._mapTruth(truthType=sample[1])
+
+        # apply input signal, propagation
+        self.net.phase(I_in=img)
+        
+        # evaluate output signal
+        outs = np.asarray(self.net.getOuts())
+        # determine 'ground truth'
+        gt = np.empty(len(outs))
+        gt[truthType] = 1
+        # calculate the mse across all outputs
+        mse = np.sum(np.square(gt - outs))/len(outs)
+        self.error.append(mse)
+
+
+    def _generation(self):
+        """
+            Runs one generation on the network
+        """
+        # fetch a random training sample
+        sample = self.train(rng.random() * self.dataNums[_TRAIN])
+        img = list(np.asarray(sample[0]) / 100)
+        truthType = self._mapTruth(truthType=sample[1])
+        self.env.setTruth(truthType)
+
+        # apply input signal, initial propagation
+        self.net.phase(I_in=img)
+        
+        # apply to environment, get the pain currents
+        pain_Is = self.env.evalOutput()
+
+        # Repropagate with pain neurons
+        self.net.phase(I_in=img, I_pain = pain_Is)
+
+        # Adjust weights
+        self.net.adjustWeights(lr = self.lr)
 
         
     def _getImg(self, whichSet : int) -> list:

@@ -7,7 +7,8 @@ import funcs
 import numpy as np
 
 class Environment(object):
-    def __init__(self, net : Network, 
+    def __init__(self, 
+                 net : Network, 
                  stablePause : int = 20, 
                  minFullOn : float = 1.0,
                  maxFullOff: float = 0.05):
@@ -15,7 +16,7 @@ class Environment(object):
         self.net = net
         self.stablePause = stablePause # time to wait for network to stabilize after startup
         self.outputs = self.net.neurons[-1]
-        self.painIs =  list(np.empty(len(self.net.structure[1]))) # pain currents
+        self.painIs =  list(np.empty(self.net.structure[1])) # pain currents
         self.minFullOn = minFullOn # min value for activity to be considered "fully on"
         self.maxFullOff = maxFullOff # max value for activity to be consider "fully off"
 
