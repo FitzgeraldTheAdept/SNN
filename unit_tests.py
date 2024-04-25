@@ -584,6 +584,7 @@ def writeNet():
     
     """
     net = Network(structure = [2, 2, 2, 2])
+    net._dumpInfo()
     net.writeNetwork(path="testnet.net")
     pass
 
@@ -592,6 +593,7 @@ def loadNet():
         test Loading a network
     """
     net = Network(path="testnet.net")
+    net._dumpInfo()
     net.writeNetwork(path="testnet2.net")
     pass
 
@@ -606,7 +608,7 @@ if __name__ == "__main__":
     # activityCalcDependent()
     #hebTest()
     #writeNet()
-    #loadNet()
+    loadNet()
     pass
 
 

@@ -130,16 +130,28 @@ class Network(object):
                 # find the number of hidden layers; minus 3 for input, output, and pain layers
                 numHideLays = len(self.structure) - 3
 
-                Ins     = [Neuron(type=1)] * numIns     # 1 = input neuron
-                Pains   = [Neuron(type=-1)] * numPains  # -1 = pain neuron
-                Outs    = [Neuron(type=0)] * numOuts    # 0 = output neuron    
+                Ins = list()
+                Pains = list()
+                Outs = list()
+
+               # Build network of distinct neurons
+
+                for i in range(0, numIns):
+                    Ins.append(Neuron(type=1))      # type 1 = input
+                for i in range(0, numPains):
+                    Pains.append(Neuron(type=-1))   # type -1 = pain
+                for i in range(0, numOuts):
+                    Outs.append(Neuron(type=0))     # type 0 = output
 
                 neurons = [Ins, Pains]
                 
                 # Add in hidden layers
                 i = 3
                 while i < len(self.structure):
-                    neurons.append([Neuron(type=2)] * self.structure[i]) # 2 = hidden neuron
+                    HL = list()
+                    for j in range(0, self.structure[i]):
+                        HL.append(Neuron(type=2))  # 2 = hidden neuron
+                    neurons.append(HL)
                     i = i + 1
                         
                 # add in the outputs as the last layer
@@ -149,7 +161,6 @@ class Network(object):
                 line = f.readline().strip('\n')
                 weights = self._parseWeights(line = line)
 
-                # print(weights) # DEBUG
                 # connect all the input neurons to the pain neurons
                 self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1], weights=weights)
                 
@@ -357,16 +368,29 @@ class Network(object):
         # find the number of hidden layers; minus 3 for input, output, and pain layers
         numHideLays = len(structure) - 3
 
-        Ins     = [Neuron(type=1)] * numIns     # 1 = input neuron
-        Pains   = [Neuron(type=-1)] * numPains  # -1 = pain neuron
-        Outs    = [Neuron(type=0)] * numOuts    # 0 = output neuron    
+        Ins = list()
+        Pains = list()
+        Outs = list()
 
+        # Build network of distinct neurons
+
+        for i in range(0, numIns):
+            Ins.append(Neuron(type=1))      # type 1 = input
+        for i in range(0, numPains):
+            Pains.append(Neuron(type=-1))   # type -1 = pain
+        for i in range(0, numOuts):
+            Outs.append(Neuron(type=0))     # type 0 = output
+    
         neurons = [Ins, Pains]
         
         # Add in hidden layers
         i = 3
         while i < len(structure):
-            neurons.append([Neuron(type=2)] * structure[i]) # 2 = hidden neuron
+            HL = list()
+            for j in range(0, structure[i]):
+                HL.append(Neuron(type=2))   # type 2 = hidden neuron
+
+            neurons.append(HL) 
             i = i + 1
                 
         # add in the outputs as the last layer
@@ -385,6 +409,11 @@ class Network(object):
         # connect all the input neurons to the pain neurons
         self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1])
 
+        #DEBUG
+        #self.neurons = neurons
+        #self._dumpInfo()
+        #print(" \n\n")
+
         # DEBUG
         """
         for neu in neurons[0]:
@@ -396,6 +425,11 @@ class Network(object):
         if numHideLays > 0:
             # connect all the input and pain neurons to the first hidden layer, if it exists
             self.fillConnects(fromLayer=neurons[0], toLayer=neurons[2])
+            #DEBUG
+            #self.neurons = neurons
+            #self._dumpInfo()
+            #print(" \n\n")
+
 
             # connect pain neurons to all hidden layers
             hlayer = 2 # 0th hidden layer
@@ -444,20 +478,9 @@ class Network(object):
                 if weights is None:
                    
                     # No weights provided: randomize the weights
-                    
-                    # DON'T REGISTER IT TWICE
-                    alreadyRegistered = False
-                    for syn in fromNeu.outSyns:
-                        toNeuSyns = syn.post.inSyns
-                        for toSyn in toNeuSyns:
-                            if syn.weight == toSyn.weight:
-                                alreadyRegistered = True
-                                break
-                        if alreadyRegistered:
-                            break
-                                
-                    if not alreadyRegistered:
-                        fromNeu.connect(toNeu, 0, ispike=self.ispikeshape, weight=rng.random() * self.maxI)
+                    #DEBUG
+                    #print(f"Connecting {fromNeu.type} {fromNeu} to {toNeu.type} {toNeu}")
+                    fromNeu.connect(toNeu, 0, ispike=self.ispikeshape, weight=rng.random() * self.maxI)
                 else:
                     # weights provided
                     
