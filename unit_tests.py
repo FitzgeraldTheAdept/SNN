@@ -33,9 +33,9 @@ def neuInit():
     # Connect the neurons
     inNeuron.connect(outNeuron, 0)
 
-    # make a list of the synapses
-    a_syns = list(inNeuron.outSyns)
-    b_syns = list(outNeuron.inSyns)
+    # retrieve a list of the synapses
+    a_syns = inNeuron.outSyns
+    b_syns = outNeuron.inSyns
 
     # Make sure neurons both register the synapse connection properly
     if a_syns[0] is not b_syns[0]:
@@ -117,8 +117,8 @@ def neuCalcI():
     in_b.spikes = spikes2
 
     # Check the current through the synapse from in_a to out_a
-    in_a_syns = list(in_a.outSyns)
-    in_b_syns = list(in_b.outSyns)
+    in_a_syns = in_a.outSyns
+    in_b_syns = in_b.outSyns
     syn = in_a_syns[0]
     syn_I = np.empty(T)
     for i in range(0, T):

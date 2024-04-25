@@ -28,8 +28,8 @@ class Neuron(object):
         self.v = list()
         #self.v = list()
         self.v.append(self.params['c']) # membrane potential in millivolts
-        self.inSyns = set()             # input synapses
-        self.outSyns = set()            # output synapses
+        self.inSyns = list()             # input synapses
+        self.outSyns = list()            # output synapses
         self.u = self.params['b'] * self.v[0]
         self.type = type                # 0 = output, 1 = input, 2 = hidden, -1 = pain
         
@@ -101,7 +101,7 @@ class Neuron(object):
     def regSynapse(self, syn, IO : int):
         """
         Registers a new synaptic connection as either an input (1) or output (0) synapse connection to this neuron.
-        Adds to self.inSyns or self.outSyns, after checking to see if it's already been registered.
+        Adds to self.inSyns or self.outSyns
 
         Inputs:
             syn - Synapse to be registered
@@ -110,9 +110,9 @@ class Neuron(object):
         """
 
         if IO == 1:
-            self.inSyns.add(syn)
+            self.inSyns.append(syn)
         elif IO == 0:
-            self.outSyns.add(syn)
+            self.outSyns.append(syn)
         else:
             raise ValueError('Illegal value for IO: must be 1 (if neuron is postsynaptic) or 0 (presynaptic)')
 
@@ -123,10 +123,10 @@ class Neuron(object):
             Inputs:
                 toNeuron = neuron object to connect with
                 prePost  = 0 for this neuron being the presynaptic, 1 for it being the post
-        """
-        #random.seed(42)
-        # seed set outside this function
+                ispike = shape of the current spike
+                weight = neuron weight
 
+        """
         
         from synapse import Synapse
         if prePost == 0:

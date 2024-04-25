@@ -30,7 +30,7 @@ class Synapse(object):
         
     
 
-    def step(self, simStep : int):
+    def step(self, simStep : int) -> float:
         """
             Calculates the current for this synapse at this simulation step
             Inputs:
