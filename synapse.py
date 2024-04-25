@@ -19,7 +19,7 @@ class Synapse(object):
 
         # register with the neurons
         self.pre.regSynapse(self,0)
-        self.post.regSynapse(self,1)    
+        self.post.regSynapse(self,1)   
         
     
     def setISpike(self, ispike : np.array):

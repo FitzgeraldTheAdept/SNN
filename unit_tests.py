@@ -1,6 +1,7 @@
 
 from synapse import Synapse
 from neuron import Neuron
+from network import Network
 import funcs
 from PIL.Image import Image 
 import json
@@ -576,17 +577,36 @@ def imgVis():
     
 """ TRAINER TESTS """
 
+""" NETWORK TESTS """
+def writeNet():
+    """
+        test the writing of a network
+    
+    """
+    net = Network(structure = [2, 2, 2, 2])
+    net.writeNetwork(path="testnet.net")
+    pass
+
+def loadNet():
+    """
+        test Loading a network
+    """
+    net = Network(path="testnet.net")
+    net.writeNetwork(path="testnet2.net")
+    pass
 
 if __name__ == "__main__":
     # Test to Run
     #neuCalcI()
     #inTest()
     #painI()
-    # InIntoPain()
+    #InIntoPain()
     #imgVis()
     # activityCalcIndependent()
     # activityCalcDependent()
-    hebTest()
+    #hebTest()
+    #writeNet()
+    #loadNet()
     pass
 
 

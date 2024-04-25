@@ -109,6 +109,13 @@ class Neuron(object):
             
         """
 
+        # DEBUG
+        """
+        if self.type == _OUTPUT:
+            print("OUTPUT NEURON REGISTERING SYNAPSE")
+            print(syn.weight)
+            """
+
         if IO == 1:
             self.inSyns.append(syn)
         elif IO == 0:
@@ -132,20 +139,18 @@ class Neuron(object):
         if prePost == 0:
             # This neuron is the presynaptic
             if weight == -256:
-                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=random.random() * maxI, ispike=ispike)
+                Synapse(preNeuron=self, postNeuron=toNeuron, weight=random.random() * maxI, ispike=ispike)
             else:
-                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
+                Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
 
         elif prePost == 1:
             # This neuron is the postsynaptic 
             if weight == -256:
-                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight= random.random() * maxI, ispike=ispike)
+                Synapse(preNeuron=toNeuron, postNeuron=self, weight= random.random() * maxI, ispike=ispike)
             else:
-                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight=weight, ispike=ispike)
+                Synapse(preNeuron=toNeuron, postNeuron=self, weight=weight, ispike=ispike)
 
         else:
             raise ValueError('Illegal prePost Value: must be 0 for pre- or 1 for post- synaptic')
 
-
-        return syn
 
