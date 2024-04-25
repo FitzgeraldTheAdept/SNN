@@ -146,12 +146,33 @@ class Controller(object):
                                     print("Number of Generations must be greater than 0")
                             except ValueError as e:
                                 print(f"Not a valid number.  Please input an integer")
+
+                    numEpochs = -1
+                    while not endRoutine and numEpochs <= 0:
+                        val = input("Please specify the number of Epochs to train for.\n>> ")
+                        if val.find("exit") != -1 or val.find("end") != -1:
+                            endRoutine = 1
+                        elif val == '':
+                            # no input specified
+                            numEpochs = 10
+                        else:
+                            try:
+                                numEpochs = int(val)
+                                if numEpochs <= 0:
+                                    print("Number of Epochs must be greater than 0")
+                            except ValueError as e:
+                                print(f"Not a valid number.  Please input an integer")
                         
                     if not endRoutine:
-                        trainerBot = Trainer(network=self.network, numGens=numGens)
+                        trainerBot = Trainer(network=self.network, numGens=numGens, numEpochs = numEpochs)
                         
                         print("Contstructed Trainer.  Beginning Training")
                         trainerBot.trainNetwork()
+                        plt.figure()
+                        plt.plot(trainerBot.error)
+                        plt.xlabel("Epoch")
+                        plt.ylabel("MSE")
+                        plt.show()
 
                 elif choice == 5:
                     print("Running Inference on active network.")
@@ -178,7 +199,7 @@ class Controller(object):
                     input("\nPress Enter to Continue.")
                     print("\n\n")
                 elif choice == 6:
-                    # Not set up yet
+                    
                     print("Starting Validation")
                     self._valid()
             elif choice == -100:
@@ -255,7 +276,7 @@ class Controller(object):
         imgs = data['Images']
         rng.seed(52)
 
-        testVals = list()
+       
         # get 4 images
         fig, axs = plt.subplots(nrows=2,ncols=2)
         for i in [0, 1]:

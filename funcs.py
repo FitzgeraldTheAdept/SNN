@@ -90,7 +90,8 @@ def floatRange(start : float, end : float, delta : float):
 
     return y
 
-def actCompare(spikes1 : list, 
+def actCompare(cur1 : list,
+               spikes1 : list, 
                spikes2 : list, 
                dt : float = 0.01, 
                endTime : int = 100, 
@@ -108,7 +109,8 @@ def actCompare(spikes1 : list,
     """
 
     # Quantify the activity of the first spiking signal
-    act1 = actQuant(spikes=spikes1, dt = dt, endTime = endTime, startTime = startTime)
+    #act1 = actQuant1(spikes=spikes1, dt = dt, endTime = endTime, startTime = startTime)
+    act1 = actQuant2(cur=cur1)
 
     # Get the timing difference from spikes1 -> spikes2
     timeDifs = timeComp(spikes1 = spikes1, spikes2 = spikes2, dt = dt, startTime= startTime)
@@ -151,6 +153,12 @@ def actCompare(spikes1 : list,
     return causeAct2
     #return causeAct2
 
+def actQuant2(cur : list)-> float:
+    """
+        Calclate activation based on average current, NOT counting voltage spikes
+    """
+    return np.mean(cur)
+
 def actQuant(spikes : list, 
              dt : float = 0.01, 
              endTime : int = 100, 
@@ -171,6 +179,7 @@ def actQuant(spikes : list,
     """
     
     maxSpikes = (endTime - startTime) / 4 # everything in units of ms
+
     
     # Count the spikes to quantify activation
     # find the first element greater than the start index

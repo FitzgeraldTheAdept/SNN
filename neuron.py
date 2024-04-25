@@ -5,7 +5,6 @@
 from math import pow
 import random
 import funcs
-from synapse import maxI
 from synapse import Synapse
 
 _INPUT = 1
@@ -24,7 +23,7 @@ class Neuron(object):
     params['c'] = -65
     params['d'] = 8
     
-    def __init__(self, type : int, mxI : float = maxI):
+    def __init__(self, type : int, mxI : float = 80):
         self.v = list()
         #self.v = list()
         self.v.append(self.params['c']) # membrane potential in millivolts
@@ -32,6 +31,7 @@ class Neuron(object):
         self.outSyns = list()            # output synapses
         self.u = self.params['b'] * self.v[0]
         self.type = type                # 0 = output, 1 = input, 2 = hidden, -1 = pain
+        self.I = list()
 
         self.mxI = mxI                     # maximum synapse current
 
@@ -73,11 +73,12 @@ class Neuron(object):
         if self.type is _PAIN:
             I = I + I_in
 
-        # Saturation Check
-        if I < 0:
-            I = 0
+        # saturation check
         if I > self.mxI:
             I = self.mxI
+
+        elif I < -self.mxI:
+            I = -self.mxI
 
         vnow = self.v[simStep] # current membrane potential
         dv = (0.04 * pow(vnow,2) + 5 * vnow + 140 - self.u + I) * dt
@@ -98,6 +99,9 @@ class Neuron(object):
             elif self.spikes[-1] < simStep - 4 / dt:
                 # Count only the first spike.  This is to combat model instability
                 self.spikes.append(simStep)
+
+        # normalized current
+        self.I.append(I/self.mxI)
 
         
 
@@ -178,6 +182,7 @@ class Neuron(object):
         """
         self.spikes = list()
         self.v = list()
+        self.I = list()
         self.v.append(self.params['c']) # membrane potential in millivolts
         self.u = self.params['b'] * self.v[0]
         
@@ -190,10 +195,11 @@ class Neuron(object):
                 pD      - phase duration
                 iDur    - ignore duration
         """
-        return funcs.actQuant(spikes=self.spikes, 
-                                dt=dt,
-                                endTime=pD,
-                                startTime=iDur)
+        #return funcs.actQuant(spikes=self.spikes, 
+        #                        dt=dt,
+         #                       endTime=pD,
+         #                       startTime=iDur)
+        return funcs.actQuant2(cur=self.I)
 
 
 

@@ -509,6 +509,8 @@ class Network(object):
         
         if I_pain is not None:
             scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
+            print(f"NETWORK: Scaled pain currents are: {scaled_Ipain}")
+
         while self.simStep < len(self.t):
 
             # Solve all the neurons, starting with the input layer and moving forward
@@ -571,7 +573,7 @@ class Network(object):
         if self.simStep > 0 : # DEBUG : change from len(self.t)
             # simulation has been run
             outs = list()
-            for x in self.neurons[len(self.neurons)-1]:
+            for x in self.neurons[-1]:
                 outs.append(x.getAct(dt=self.dt, pD = self.phaseDuration, iDur = self.waitTime))
             
             # DEBUG

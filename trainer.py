@@ -21,16 +21,16 @@ class Trainer(object):
     def __init__(self, 
                  network : object, 
                  dataPath : str = "./data/", 
-                 learnRate : float = 1.0,
+                 learnRate : float = 0.01,
                  numGens : int = 20, # generations between testing epochs
                  numEpochs : int = 10, # number of testing epochs for the test
-                 backupEpochs : int = 5, # number of epochs after which to save a copy of the network as is
+                 backupEpochs : int = 3, # number of epochs after which to save a copy of the network as is
                  resPath : str = "trained" # name of trained network file saved at the end
                  ):
         self.net = network      # neural network to train
 
         from environment import Environment
-        self.env = Environment(net=network)  # Environment to use for training
+        self.env = Environment(net=network, minFullOn = 0.8, maxFullOff=0.1)  # Environment to use for training
 
         self.dataPath = dataPath # path to training data
         self.lr = learnRate
@@ -75,13 +75,14 @@ class Trainer(object):
             print(f"MSE = {self.error[-1]}")
 
             i = i + 1 # mark the epochs completed since last backup
-            if i <= self.backupEpochs:
+            if i >= self.backupEpochs:
                 print("Saving a backup.")
                 self.net.writeNetwork(path="backup.net")
                 i = 0
             
         print("Training finished!")
         self.net.writeNetwork(self.resPath + ".net")
+        
 
         
     
@@ -89,23 +90,28 @@ class Trainer(object):
         """
             Tests network and evaluates error
         """
-        # fetch a random testing sample
-        sample = self.test[int(rng.random() * self.dataNums[_TEST-1])]
-        img = list(np.asarray(sample[0]) / 100)
-        truthType = self._mapTruth(truthType=sample[1])
 
-        # apply input signal, propagation
-        self.net.phase(I_in=img)
+        mse = 0
+        # evaluate 4 outputs, find mean of mean squared errors
+        for i in [0, 1, 2, 3]:
+            # fetch a random testing sample
+            sample = self.test[int(rng.random() * self.dataNums[_TEST-1])]
+            img = list(np.asarray(sample[0]) / 100)
+            truthType = self._mapTruth(truthType=sample[1])
+
+            # apply input signal, propagation
+            self.net.phase(I_in=img)
+            
+            outs = np.asarray(self.net.getOuts())
+            # determine 'ground truth'
+            gt = np.empty(len(outs))
+            gt[truthType] = 1
+            # calculate the cumulative square error across all outputs
+            mse = mse + np.sum(np.square(gt - outs))/len(outs)
         
-        # evaluate output signal
-        outs = np.asarray(self.net.getOuts())
-        # determine 'ground truth'
-        gt = np.empty(len(outs))
-        gt[truthType] = 1
-        # calculate the mse across all outputs
-        mse = np.sum(np.square(gt - outs))/len(outs)
+        mse = mse / 4
+            
         self.error.append(mse)
-
 
     def _generation(self):
         """
@@ -116,12 +122,15 @@ class Trainer(object):
         img = list(np.asarray(sample[0]) / 100)
         truthType = self._mapTruth(truthType=sample[1])
         self.env.setTruth(truthType)
+        print(f"TRAINER: Applying with a {truthType} ({img})") #DEBUG
 
         # apply input signal, initial propagation
         self.net.phase(I_in=img)
         
+        print(f"TRAINER: Outputs are : {self.net.getOuts()}")
         # apply to environment, get the pain currents
         pain_Is = self.env.evalOutput()
+        #print(f"TRAINER: Pain Currents are: {pain_Is}") # DEBUG
 
         # Repropagate with pain neurons
         self.net.phase(I_in=img, I_pain = pain_Is)

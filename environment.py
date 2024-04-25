@@ -58,26 +58,42 @@ class Environment(object):
         
         
         # Find spikes for each output
-        spikes = list(map(lambda x : x.spikes, self.outputs))
+        #spikes = list(map(lambda x : x.spikes, self.outputs))
+        # find the current for each output
+        cur = list(map(lambda x : x.I, self.outputs))
         
+        """
         fn = lambda x : funcs.actQuant(spikes = x, 
                                     dt=self.net.dt, 
                                     endTime=self.net.phaseDuration,
                                     startTime=self.stablePause)
+                                    """
+        fn = lambda x : funcs.actQuant2(cur=x)
         
         # Evaluate activity of each neuron
-        activity =list(map(fn, spikes))
+        #activity =list(map(fn, spikes))
+        activity = list(map(fn, cur))
 
         ###### Evaluate against the truth ######
         # go through each neuron
         for i in range(0, len(self.outputs), 1):
-            if i == self.truth:
-                # this neuron should be active
-                self.painIs[i] = minFullOn - activity[i]
+            if i == self.truth and activity[i] < 0.6:
+                # this output neuron should be active, but it isn't
+                # turn off the pain neuron
+                #self.painIs[i] = 0.6 - activity[i] # DEBUG: had minFullOn 
+                self.painIs[i] = 0
+                #if self.painIs[i] < 0:
+                #    self.painIs[i] == 0
 
+            elif activity[i] > 0.2:
+                # this neuron should NOT be active, but it do be
+                self.painIs[i] = activity[i] - 0.2 # DEBUG: had maxFullOff
+                #if self.painIs[i] < 0:
+                 #   self.painIs[i] =
             else:
-                # this neuron should NOT be active
-                self.painIs[i] = activity[i] - maxFullOff
+                # Neurons are behaving
+                self.painIs[i] = 0
+
                 
 
         return self.painIs

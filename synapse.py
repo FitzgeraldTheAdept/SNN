@@ -1,7 +1,7 @@
 # This file contains the synapse class
 
-maxI = 80   # maximum synapse current.  This gives a refractory period of ~4 ms
-
+#maxI = 80   # maximum synapse current.  This gives a refractory period of ~4 ms
+maxI = 20
 import numpy as np
 # from neuron import Neuron
 import funcs
@@ -23,7 +23,16 @@ def hebbian1(syn : object, dt : float = 0.01, phaseDur : int = 300, ignoreDur : 
     preSpikes = syn.pre.spikes
     postSpikes = syn.post.spikes
     # Calculate the correlation between these two spiking signals
+    """
     corr = funcs.actCompare(spikes1=preSpikes,
+                     spikes2=postSpikes,
+                     dt=dt,
+                     endTime=phaseDur,
+                     startTime=ignoreDur,
+                     maxDelay=35)
+    """
+    corr = funcs.actCompare(cur1 = syn.pre.I,
+                     spikes1=preSpikes,
                      spikes2=postSpikes,
                      dt=dt,
                      endTime=phaseDur,
@@ -31,15 +40,19 @@ def hebbian1(syn : object, dt : float = 0.01, phaseDur : int = 300, ignoreDur : 
                      maxDelay=35)
     
     # Also calculate the activity of each neuron separately
-    act1 = funcs.actQuant(spikes=preSpikes,
+    """
+    act1 = funcs.actQuant2(spikes=preSpikes,
                         dt = dt, 
                         endTime= phaseDur, 
                         startTime = ignoreDur)
     
-    act2 = funcs.actQuant(spikes=postSpikes,
+    act2 = funcs.actQuant2(spikes=postSpikes,
                         dt = dt, 
                         endTime= phaseDur, 
                         startTime = ignoreDur)
+    """
+    act1 = funcs.actQuant2(cur=syn.pre.I)
+    act2 = funcs.actQuant2(syn.pre.I)
     
     #maxAct = (phaseDur - ignoreDur)/4 # 4 ms
 
@@ -118,8 +131,8 @@ class Synapse(object):
                         synI = self.ispikeShape[int(simStep-spike)]
 
         # see if the previous neuron is a pain neuron. If it is, current counts as a negative
-        if self.pre.type == -1:
-            synI = -1 * synI
+        #if self.pre.type == -1:
+        #    synI = -1* synI 
 
         return synI * self.weight
 
@@ -143,13 +156,11 @@ class Synapse(object):
 
         self.weight = self.weight + lr * strength
 
-        
-
         # Handle weight saturation
         if self.weight > maxI:
             self.weight = float(maxI)
-        if self.weight < 0:
-            self.weight = 0.0
+        if self.weight < -1*maxI: 
+            self.weight = float(-1*maxI)
 
         return self.weight
     
