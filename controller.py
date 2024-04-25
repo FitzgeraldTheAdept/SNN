@@ -4,3 +4,5 @@
     - Controls the training
 
 """
+from network import Network
+from environment import Environment

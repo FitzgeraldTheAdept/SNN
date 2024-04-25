@@ -400,7 +400,7 @@ class Network(object):
         #ispikeTotal = funcs.ispike(dt=self.dt)
         #ispikeshape = ispikeTotal['current']
 
-        rng.seed(41) # seed with current time, or other random seed from the OS
+        rng.seed() # seed with current time, or other random seed from the OS
         
         #DEBUG
         #for lay in neurons:
@@ -516,29 +516,35 @@ class Network(object):
 
     def phase(self, I_in : list, I_pain : list):
         """
-            Execute a phase
-            In other words, solve the whole network for the current simStep, then increment to the next step
+            Execute a phase (or a propagation).  
+            In other words, solve the whole network for every simstep
             Inputs:
                 I_in - currents derived from the input strength, list of floats
                 I_pain - currents to the pain neurons
 
         """
+        scaled_Iin = list(np.asarray(I_in) * self.maxI)
+        scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
         while self.simStep < len(self.t):
-            
+
             # Solve all the neurons, starting with the input layer and moving forward
             for layer in self.neurons:
+                # input/pain current index tracker
+                i = 0
                 for neu in layer:
                     if neu.type == 1:
-                        neu.step(simStep = self.simStep, dt = self.dt, I_in = I_in)
+                        
+                        neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Iin[i])
                         
                     elif neu.type == -1:
                         # pain neuron
-                        neu.step(simStep = self.simStep, dt = self.dt, I_in = I_pain )
+                        neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Ipain[i])
                         # Neurons will check synapses to find their other input current
                     else:
                         # other neuron
                         neu.step(simStep = self.simStep, dt = self.dt)
                         # Neurons will check synapses to find their input current
+                    i = i + 1
 
             # increment to next simulation step
             self.simStep = self.simStep + 1
@@ -549,6 +555,25 @@ class Network(object):
         
         """
         pass
+
+    def getOuts(self) -> list:
+        """
+            Calculates a vector of the same length as the number of outputs, 
+            containing the activity of each output neuron
+
+            OUTPUTS:
+                a list of activity values between 0 and 1
+        """
+        if self.simStep >= len(self.t) :
+            # simulation has been run
+            fn = lambda x : funcs.actQuant(spikes=x.spikes, 
+                                           dt=self.dt,
+                                           endTime=self.phaseDuration,
+                                           startTime=20)
+            return list(map(fn, self.neurons[-1]))
+
+
+        funcs.actQuant
 
 
 if __name__ == '__main__':

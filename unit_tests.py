@@ -593,9 +593,35 @@ def loadNet():
         test Loading a network
     """
     net = Network(path="testnet.net")
-    net._dumpInfo()
+    #net._dumpInfo()
     net.writeNetwork(path="testnet2.net")
     pass
+
+def bigNet():
+    """
+        Try building and writing a full-sized network
+        
+    """
+    net = Network(structure= [4, 3, 3, 6, 6])
+    net.writeNetwork(path="big.net")
+
+def loadBigNet():
+    """
+        Try loading a full-sized network
+    """
+    net = Network(path="big.net")
+    net.writeNetwork(path="big2.net")
+
+def inferTest():
+    """
+        Test running inference on a full-sized network (executing a phase)
+    """
+    net = Network(structure=[4, 3, 3, 6, 6])
+    net.phase(I_in=[1, 1, 0, 0], I_pain=[0, 0, 0, 0])
+    print(net.getOuts())
+
+    
+
 
 if __name__ == "__main__":
     # Test to Run
@@ -608,7 +634,9 @@ if __name__ == "__main__":
     # activityCalcDependent()
     #hebTest()
     #writeNet()
-    loadNet()
+    #loadNet()
+    #loadBigNet()
+    inferTest()
     pass
 
 
