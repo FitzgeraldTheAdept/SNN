@@ -4,8 +4,9 @@
 
 from math import pow
 import random
-
-# Would really like to have the above line but for whatever reason we get a circular import
+import funcs
+from synapse import maxI
+from synapse import Synapse
 
 _INPUT = 1
 _OUTPUT = 0
@@ -23,7 +24,7 @@ class Neuron(object):
     params['c'] = -65
     params['d'] = 8
     
-    def __init__(self, type : int):
+    def __init__(self, type : int, mxI : float = maxI):
         self.v = list()
         #self.v = list()
         self.v.append(self.params['c']) # membrane potential in millivolts
@@ -31,7 +32,8 @@ class Neuron(object):
         self.outSyns = list()            # output synapses
         self.u = self.params['b'] * self.v[0]
         self.type = type                # 0 = output, 1 = input, 2 = hidden, -1 = pain
-        
+
+        self.mxI = mxI                     # maximum synapse current
 
         self.spikes = list()            # list of times when a spike occurred
 
@@ -62,7 +64,7 @@ class Neuron(object):
                 dt      = time step (in ms)
                 I_in    = input current
         """
-        from synapse import maxI
+        
         if self.type is _INPUT:
             I = I_in
         else:
@@ -74,8 +76,8 @@ class Neuron(object):
         # Saturation Check
         if I < 0:
             I = 0
-        if I > maxI:
-            I = maxI
+        if I > self.mxI:
+            I = self.mxI
 
         vnow = self.v[simStep] # current membrane potential
         dv = (0.04 * pow(vnow,2) + 5 * vnow + 140 - self.u + I) * dt
@@ -109,13 +111,6 @@ class Neuron(object):
             
         """
 
-        # DEBUG
-        """
-        if self.type == _OUTPUT:
-            print("OUTPUT NEURON REGISTERING SYNAPSE")
-            print(syn.weight)
-            """
-
         if IO == 1:
             self.inSyns.append(syn)
         elif IO == 0:
@@ -124,7 +119,7 @@ class Neuron(object):
             raise ValueError('Illegal value for IO: must be 1 (if neuron is postsynaptic) or 0 (presynaptic)')
 
 
-    def connect(self, toNeuron, prePost : int, ispike : list, weight : float = -256):
+    def connect(self, toNeuron : object, prePost : int, ispike : list, weight : float = -256):
         """
             Registers a connection between this Neuron and another Neuron
             Inputs:
@@ -134,23 +129,61 @@ class Neuron(object):
                 weight = neuron weight
 
         """
-        from synapse import maxI
-        from synapse import Synapse
+        
         if prePost == 0:
             # This neuron is the presynaptic
             if weight == -256:
-                Synapse(preNeuron=self, postNeuron=toNeuron, weight=random.random() * maxI, ispike=ispike)
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=random.random() * self.mxI, ispike=ispike)
             else:
-                Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
+
+            # Register the synapse connection with pre neuron
+            self.regSynapse(syn=syn, IO=0)
+            # register with the post neuron
+            toNeuron.regSynapse(syn=syn, IO = 1)
 
         elif prePost == 1:
             # This neuron is the postsynaptic 
             if weight == -256:
-                Synapse(preNeuron=toNeuron, postNeuron=self, weight= random.random() * maxI, ispike=ispike)
+                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight= random.random() * self.mxI, ispike=ispike)
             else:
-                Synapse(preNeuron=toNeuron, postNeuron=self, weight=weight, ispike=ispike)
+                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight=weight, ispike=ispike)
+
+            # Register the synapse connection with pre neuron
+            self.regSynapse(syn=syn, IO=1)
+            # register with the post neuron
+            toNeuron.regSynapse(syn=syn, IO = 0)
 
         else:
             raise ValueError('Illegal prePost Value: must be 0 for pre- or 1 for post- synaptic')
+        
+       
+    def adjustWeights(self, lr : float, dt : float, pD : int, iDur : int):
+        """
+            Adjusts the weights of all this neurons output synapses
+            INPUTS:
+                lr      - learning rate
+                dt      - time step
+                pD      - phase duration
+                iDur    - ignore duration
+        """
+        # print("DEBUG NEURON: ADJUSTING WEIGHTS")
+        for syn in self.outSyns:
+            syn.adjustWeight(lr, dt, pD, iDur)
+        
+
+    def getAct(self, dt : float, pD : int, iDur : int):
+        """
+            Get the activity for this neuron
+            INPUTS:
+                dt      - time step
+                pD      - phase duration
+                iDur    - ignore duration
+        """
+        return funcs.actQuant(spikes=self.spikes, 
+                                dt=dt,
+                                endTime=pD,
+                                startTime=iDur)
+
 
 

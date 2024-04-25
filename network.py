@@ -1,9 +1,8 @@
 import numpy as np
 import random as rng
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import funcs
 from neuron import Neuron
-from funcs import hebbian1
 
 _INPUT = 1
 _OUTPUT = 0
@@ -57,6 +56,7 @@ class Network(object):
         simStep         - Simulation step (which time index in vector t are we)
         neurons         - 2D list of Neuron objects [inputs, pain, hl1, hl2, ..., output]
         maxI            - maximum current from a single synapse. Also max synapse weight
+        weightTime      - time to let network settle before finding activities
     """
     def __init__(self, 
                  path : str = None,
@@ -64,11 +64,13 @@ class Network(object):
                  dt : float = 0.1, 
                  structure : list = [2, 1, 1], 
                  simStep : int = 0,
-                 maxI : float = 80):
+                 maxI : float = 80,
+                 waitTime = 30):
         
         if path is None:
             # build a new network
             self.phaseDuration = phaseDuration
+            self.waitTime = waitTime
             self.dt            = dt
             self.structure     = structure
 
@@ -107,6 +109,7 @@ class Network(object):
                 netParams = line.split(' ')
                                 
                 self.phaseDuration = int(netParams[0])
+                self.waitTime = 30 # TEMP for DEBUG
                 self.dt            = float(netParams[1])
                 self.maxI          = float(netParams[2])
 
@@ -168,7 +171,6 @@ class Network(object):
                     # extract the weights for the inputs to first hidden layer
                     line = f.readline().strip('\n')
                     weights = self._parseWeights(line = line)
-                    #print(weights) # DEBUG
 
                     # connect all the input neurons to the first hidden layer, if it exists
                     self.fillConnects(fromLayer=neurons[0], toLayer=neurons[2], weights = weights)
@@ -190,7 +192,7 @@ class Network(object):
                         # Extract weights for current hidden layer to next layer
                         line = f.readline().strip('\n')
                         weights = self._parseWeights(line = line)
-                        #print(weights) # DEBUG
+                        
 
                         self.fillConnects(fromLayer=neurons[layer], toLayer=neurons[layer + 1], weights = weights)
                         layer = layer + 1
@@ -284,16 +286,16 @@ class Network(object):
             
             for neu in self.neurons[0]:
                 neuOutSyns = neu.outSyns
-                #print(len(neuOutSyns))
+               
                 
                 for syn in neuOutSyns:
                     # if it's going to a pain, add to line 1
                     if syn.post.type == _PAIN:
-                        # We've got a paint output
-                        #print("PAIN") # DEBUG
+                        # We've got a pain output
+                        
                         line1 = line1 + str(syn.weight) + " "
                     elif syn.post.type == _HIDDEN:
-                        #print("HIDDEN") # DEBUG
+                        
                         line2 = line2 + str(syn.weight) + " "
 
                 # check if this is the last neuron
@@ -326,7 +328,7 @@ class Network(object):
                         
                 # increase the start Index for the next time through
                 startInd = startInd + hlSize
-                # print line to file
+               
                 
                 f.write(line + "\n")
             
@@ -402,34 +404,13 @@ class Network(object):
 
         rng.seed() # seed with current time, or other random seed from the OS
         
-        #DEBUG
-        #for lay in neurons:
-        #    print(len(lay))
-        
         # connect all the input neurons to the pain neurons
         self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1])
-
-        #DEBUG
-        #self.neurons = neurons
-        #self._dumpInfo()
-        #print(" \n\n")
-
-        # DEBUG
-        """
-        for neu in neurons[0]:
-            for syn in neu.outSyns:
-                print(syn.post.type)
-        """
             
         
         if numHideLays > 0:
             # connect all the input and pain neurons to the first hidden layer, if it exists
             self.fillConnects(fromLayer=neurons[0], toLayer=neurons[2])
-            #DEBUG
-            #self.neurons = neurons
-            #self._dumpInfo()
-            #print(" \n\n")
-
 
             # connect pain neurons to all hidden layers
             hlayer = 2 # 0th hidden layer
@@ -441,13 +422,6 @@ class Network(object):
             layer = 2 # 0th hidden layer
             while layer - 1 <= numHideLays:
                 self.fillConnects(fromLayer=neurons[layer], toLayer=neurons[layer + 1])
-                # DEBUG 
-                """
-                for neu in neurons[layer]:
-                    print(f"neuron {neu}")
-                    for syn in neu.outSyns:
-                        print(syn.weight)
-                """
 
                 layer = layer + 1
 
@@ -478,8 +452,6 @@ class Network(object):
                 if weights is None:
                    
                     # No weights provided: randomize the weights
-                    #DEBUG
-                    #print(f"Connecting {fromNeu.type} {fromNeu} to {toNeu.type} {toNeu}")
                     fromNeu.connect(toNeu, 0, ispike=self.ispikeshape, weight=rng.random() * self.maxI)
                 else:
                     # weights provided
@@ -492,7 +464,7 @@ class Network(object):
             i = i + 1
 
 
-    def _dumpInfo(self):
+    def dumpInfo(self):
         """
             DEBUG Function: dumps literally all the info
                    
@@ -512,7 +484,7 @@ class Network(object):
             Draws the Network diagram
         """
         for i in self.neurons:
-            print(len(i))
+            print(self.structure)
 
     def phase(self, I_in : list, I_pain : list = None):
         """
@@ -563,18 +535,16 @@ class Network(object):
         """
         # Go through each neuron in each layer, finding the hebbian coefficient of each synapse.  
         # Multiply that by the learning rate, adjust the weight by that much
+        
         for lay in self.neurons:
+            # print("DEBUG NETWORK: ADJUSTING WEIGHTS")
             for neu in lay:
-                # get all the output synapses
-                for syn in neu.outSyns:
-                    coef = hebbian1(syn=syn, dt=self.dt, phaseDur=self.phaseDuration, ignoreDur=20)
-                    syn.weight = syn.weight + lr * coef
-                    # handle saturations
-                    if syn.weight > self.maxI:
-                        syn.weight = self.maxI
-                    elif syn.weight < 0:
-                        syn.weight = 0
-         
+                neu.adjustWeights(lr, dt=self.dt, pD=self.phaseDuration, iDur=self.waitTime)
+                # also tries to adjust the output weights but it shouldn't be a problem
+            
+            #for neu in lay:
+            #   neu.adjustWeights(lr, dt=self.dt, pD=self.phaseDuration, iDur=self.waitTime) 
+        
         
 
     def getOuts(self) -> list:
@@ -587,14 +557,9 @@ class Network(object):
         """
         if self.simStep >= len(self.t) :
             # simulation has been run
-            fn = lambda x : funcs.actQuant(spikes=x.spikes, 
-                                           dt=self.dt,
-                                           endTime=self.phaseDuration,
-                                           startTime=20)
+            fn = lambda x : x.getAct(dt=self.dt, pD = self.phaseDuration, iDur = self.waitTime)
             return list(map(fn, self.neurons[-1]))
 
-
-        funcs.actQuant
 
 
 if __name__ == '__main__':

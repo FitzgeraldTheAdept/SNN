@@ -53,8 +53,11 @@ class Controller(object):
                     print("Option Not available.  Please <load> a network first.")
                 elif choice == 0:
                     # get info
-                    print("Made by Benjamin Wittrup\n" + 
-                          "April 26, 2024")
+                    if self.network is None:
+                        print("Made by Benjamin Wittrup\n" + 
+                                "April 26, 2024")
+                    else:
+                        self.network.dumpInfo()
                     input("Press enter to continue.")
                 elif choice == 1:
                     print("Loading a Network")
@@ -122,17 +125,29 @@ class Controller(object):
                 
                 elif choice == 4:
                     print("Initializing the training of active network")
-                    """
-                    try:
-                        numGens = int(input("Please specify the number of generations to train for.\n>> "))
-                    except ValueError as e:
-                        print(f"Not a valid number.  Please input an integer")
-                    """
                     
-                    trainerBot = Trainer(network=self.network)
-                    
-                    print("Contstructed Trainer.  Beginning Training")
-                    trainerBot.trainNetwork()
+                    numGens = -1
+                    endRoutine = 0
+                    while numGens <= 0:
+                        val = input("Please specify the number of generations to train for.\n>> ")
+                        if val.find("exit") != -1 or val.find("end") != -1:
+                            endRoutine = 1
+                        elif val == '':
+                            # no input specified
+                            numGens = 20
+                        else:
+                            try:
+                                numGens = int(val)
+                                if numGens <= 0:
+                                    print("Number of Generations must be greater than 0")
+                            except ValueError as e:
+                                print(f"Not a valid number.  Please input an integer")
+                        
+                    if not endRoutine:
+                        trainerBot = Trainer(network=self.network, numGens=numGens)
+                        
+                        print("Contstructed Trainer.  Beginning Training")
+                        trainerBot.trainNetwork()
 
                 elif choice == 5:
                     print("Running Inference on active network.")

@@ -21,7 +21,7 @@ class Trainer(object):
     def __init__(self, 
                  network : object, 
                  dataPath : str = "./data/", 
-                 learnRate : float = 10,
+                 learnRate : float = 1.0,
                  numGens : int = 20, # generations between testing epochs
                  numEpochs : int = 10, # number of testing epochs for the test
                  backupEpochs : int = 5, # number of epochs after which to save a copy of the network as is
@@ -64,6 +64,7 @@ class Trainer(object):
             INPUTS:
                 numGens - number of generations to test against
         """
+        i = 0
         for ep in range(0, self.numEpochs):
             for gen in range(0, self.numGens):
                 self._generation()
@@ -73,11 +74,11 @@ class Trainer(object):
             self._test()
             print(f"MSE = {self.error[-1]}")
 
-
-            (frac, whole) =modf(ep/self.backupEpochs)
-            if frac == 0:
+            i = i + 1 # mark the epochs completed since last backup
+            if i <= self.backupEpochs:
                 print("Saving a backup.")
                 self.net.writeNetwork(path="backup.net")
+                i = 0
             
         print("Training finished!")
         self.net.writeNetwork(self.resPath + ".net")

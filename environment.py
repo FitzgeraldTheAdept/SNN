@@ -8,7 +8,7 @@ import numpy as np
 
 class Environment(object):
     def __init__(self, 
-                 net : Network, 
+                 net : object, 
                  stablePause : int = 20, 
                  minFullOn : float = 1.0,
                  maxFullOff: float = 0.05):
