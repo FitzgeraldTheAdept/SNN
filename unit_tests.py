@@ -3,7 +3,6 @@ from synapse import Synapse
 from neuron import Neuron
 from network import Network
 import funcs
-from PIL.Image import Image 
 import json
 import numpy as np
 import matplotlib.pyplot as plt

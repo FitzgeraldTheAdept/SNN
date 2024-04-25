@@ -6,6 +6,10 @@ _OPTIONS = ["Get <info> on the network", "<Load> a network", "<Build> a network"
 
 from trainer import Trainer
 from network import Network
+import matplotlib.pyplot as plt
+import json
+import random as rng
+import numpy as np
 
 class Controller(object):
     """ COMMANDER FILE FOR PROJECT 
@@ -175,7 +179,8 @@ class Controller(object):
                     print("\n\n")
                 elif choice == 6:
                     # Not set up yet
-                    print("DEMO GOES HERE")
+                    print("Starting Validation")
+                    self._valid()
             elif choice == -100:
                 break
 
@@ -214,7 +219,7 @@ class Controller(object):
             return 4
         elif data.find("infer") != -1 or data.find("test") != -1:
             return 5
-        elif data.find("demo"):
+        elif data.find("demo") != -1:
             return 6
         else:
             print(f"'{data}' command not recognized.\n")
@@ -233,6 +238,49 @@ class Controller(object):
             options = [0, 1, 2]
             
         return options
+
+
+    def _valid(self):
+        """
+            Validation on the dataset
+        """
+        try:
+            f = open("data/valid.json")
+        except Exception as e:
+            raise e
+
+        data = json.load(f)
+        f.close()
+        numImgs = data['Num Images']
+        imgs = data['Images']
+        rng.seed(52)
+
+        testVals = list()
+        # get 4 images
+        fig, axs = plt.subplots(nrows=2,ncols=2)
+        for i in [0, 1]:
+            for j in [0, 1]:
+                imgInd = int(numImgs * rng.random() - 1)
+                # print(f" VAL {imgs[imgInd][0]}")
+                testVal = 1 - (np.asarray(imgs[imgInd][0]) / 100)
+                self.network.phase(I_in=testVal)
+                outs = self.network.getOuts()
+                axs[i][j].imshow(np.resize(testVal, (2,2)), cmap=plt.get_cmap('Greys'), vmin=0, vmax=1)
+               
+                maxVal = -1
+                maxType= -1
+                z = 0
+                for val in outs:
+                    if val > maxVal:
+                        maxVal = val
+                        maxType = z
+                    z = z + 1
+
+                axs[i][j].set_title(f"{maxType} : " + ("%.3f" % maxVal))
+                print(f"Checked validation: {2*i+j}")
+                       
+        
+        plt.show()
 
 if __name__ == "__main__":
     Controller()

@@ -424,6 +424,10 @@ class Network(object):
                 self.fillConnects(fromLayer=neurons[layer], toLayer=neurons[layer + 1])
 
                 layer = layer + 1
+        else:
+            # no hidden layers
+            self.fillConnects(fromLayer=neurons[0], toLayer=neurons[2])
+            self.fillConnects(fromLayer=neurons[1], toLayer=neurons[2])
 
         return neurons
     
@@ -497,6 +501,7 @@ class Network(object):
         """
         self.simStep = 0 # reset
         scaled_Iin = list(np.asarray(I_in) * self.maxI)
+        print(f"Network: {scaled_Iin}") #DEBUG
         if I_pain is not None:
             scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
         while self.simStep < len(self.t):
@@ -555,10 +560,17 @@ class Network(object):
             OUTPUTS:
                 a list of activity values between 0 and 1
         """
-        if self.simStep >= len(self.t) :
+        if self.simStep > 0 : # DEBUG : change from len(self.t)
             # simulation has been run
-            fn = lambda x : x.getAct(dt=self.dt, pD = self.phaseDuration, iDur = self.waitTime)
-            return list(map(fn, self.neurons[-1]))
+            outs = list()
+            for x in self.neurons[len(self.neurons)-1]:
+                outs.append(x.getAct(dt=self.dt, pD = self.phaseDuration, iDur = self.waitTime))
+            
+            # DEBUG
+            print(f"NETWORK getOuts(): {outs}")
+            return outs
+        else:
+            return None
 
 
 
