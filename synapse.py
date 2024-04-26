@@ -109,8 +109,6 @@ class Synapse(object):
             Sets Current Spike shape of this synapse
         """
         self.ispikeShape = ispike
-        
-    
 
     def step(self, simStep : int) -> float:
         """

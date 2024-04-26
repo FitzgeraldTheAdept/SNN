@@ -25,7 +25,6 @@ class Neuron(object):
     
     def __init__(self, type : int, mxI : float = 80):
         self.v = list()
-        #self.v = list()
         self.v.append(self.params['c']) # membrane potential in millivolts
         self.inSyns = list()             # input synapses
         self.outSyns = list()            # output synapses
@@ -65,13 +64,10 @@ class Neuron(object):
                 I_in    = input current
         """
         
-        if self.type is _INPUT:
+        if self.type is _INPUT or self.type is _PAIN:
             I = I_in
         else:
             I = self._calcI(simStep = simStep, dt = dt) # Calculates injected current 
-
-        if self.type is _PAIN:
-            I = I + I_in
 
         # saturation check
         if I > self.mxI:
@@ -138,7 +134,10 @@ class Neuron(object):
         if prePost == 0:
             # This neuron is the presynaptic
             if weight == -256:
-                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.75*random.random() + 0.25) * self.mxI, ispike=ispike)
+                if self.type == _PAIN:
+                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight= 1.0 * self.mxI, ispike=ispike)
+                else:
+                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.5*random.random() + 0.25) * self.mxI, ispike=ispike)
             else:
                 syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
 
@@ -148,11 +147,13 @@ class Neuron(object):
             toNeuron.regSynapse(syn=syn, IO = 1)
 
         elif prePost == 1:
-            # This neuron is the postsynaptic 
             if weight == -256:
-                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight= random.random() * self.mxI, ispike=ispike)
+                if self.type == _PAIN:
+                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight= 1.0 * self.mxI, ispike=ispike)
+                else:
+                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.5*random.random() + 0.25) * self.mxI, ispike=ispike)
             else:
-                syn = Synapse(preNeuron=toNeuron, postNeuron=self, weight=weight, ispike=ispike)
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
 
             # Register the synapse connection with pre neuron
             self.regSynapse(syn=syn, IO=1)

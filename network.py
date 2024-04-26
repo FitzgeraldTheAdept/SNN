@@ -65,7 +65,7 @@ class Network(object):
                  structure : list = [2, 1, 1], 
                  simStep : int = 0,
                  maxI : float = 80,
-                 waitTime = 30):
+                 waitTime = 20):
         
         if path is None:
             # build a new network
@@ -109,9 +109,9 @@ class Network(object):
                 netParams = line.split(' ')
                                 
                 self.phaseDuration = int(netParams[0])
-                self.waitTime = 30 # TEMP for DEBUG
                 self.dt            = float(netParams[1])
                 self.maxI          = float(netParams[2])
+                self.waitTime      = int(netParams[3])
 
                 self.t             = list(map(lambda x: x * self.dt, range(0, int(self.phaseDuration / self.dt) + 1,1)))
 
@@ -161,11 +161,11 @@ class Network(object):
                 neurons.append(Outs)
                 
                 # Extract the weights for the input neurons to pain layer
-                line = f.readline().strip('\n')
-                weights = self._parseWeights(line = line)
+                #line = f.readline().strip('\n')
+                #weights = self._parseWeights(line = line)
 
                 # connect all the input neurons to the pain neurons
-                self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1], weights=weights)
+                # self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1], weights=weights)
                 
                 if numHideLays > 0:
                     # extract the weights for the inputs to first hidden layer
@@ -210,7 +210,7 @@ class Network(object):
                     line = f.readline().strip('\n')
                     weights = self._parseWeights(line = line)
 
-                    self.fillConnects(fromLayer=neurons[1], toLayer=neurons[2], weights = weights)
+                    #self.fillConnects(fromLayer=neurons[1], toLayer=neurons[2], weights = weights)
 
                 self.neurons = neurons
                 
@@ -270,6 +270,10 @@ class Network(object):
 
         """
 
+        # DEBUG
+        self.writeNetwork2(path=path)
+        return
+
         with open(path, "w") as f:
             # Write the network parameters
             f.write(f"{self.phaseDuration} {self.dt} {self.maxI}\n")
@@ -306,6 +310,95 @@ class Network(object):
             # Now that we've constructed the inputs to pain and inputs to hidden layer 0 lines, write to file
             f.write(line1 + "\n")
             f.write(line2 + "\n")
+
+            # Now iterate through the pain neurons
+            # Some math is going to need to be done here
+            startInd = 0
+            for hlSize in self.structure[3:]:
+                # this is going to start pulling out the size of hidden layers
+                # extract that many output syns from each neuron
+                # start the next time with extracting from startInd
+                line = ""
+                for neu in self.neurons[1]:
+                    neuOutSyns = neu.outSyns 
+                    
+                    for i in range(0, hlSize):
+                        # pulls out hlSize synapses from each pain neuron
+                        line = line + str(neuOutSyns[startInd + i].weight) + " "
+
+                    # check if this is the last pain neuron
+                    # add a semicolon to the strings
+                    line = line + ";"
+                        
+                # increase the start Index for the next time through
+                startInd = startInd + hlSize
+               
+                
+                f.write(line + "\n")
+            
+            # Alright, pain neurons are done.  Now do the hidden layers as normal
+            # find the number of hidden layers; minus 3 for input, output, and pain layers
+            numHideLays = len(self.structure) - 3
+            layer = 2 # 0th hidden layer
+            while layer - 1 <= numHideLays:
+                
+                # Extract and write weights for current hidden layer to next layer
+                line = ""
+                for neu in self.neurons[layer]:
+                    
+                    for syn in neu.outSyns:
+                        line = line + str(syn.weight) + " "
+                    # add a semicolon to the strings
+                    line = line + ";"
+                
+                f.write(line + "\n")
+                layer = layer + 1
+
+            f.close()
+
+    def writeNetwork2(self, path : str):
+        """
+            Write the network to a file.  Severed input to pain connections
+            file formatted as (with spaces):
+                phase_duration dt maxI
+                ispike0 ispike1 ispike2 ...
+                #inputs #pains #outputs #hidden0 #hidden1 ...
+                in0>hidden0_0 in0>hidden0_1 in0>hidden0_2 ;in1>hidden0_0 in1>hidden0_1 in1>hidden0_2 ; ... ;
+                pain0>hidden0_0 pain0>hidden0_1 pain0>hidden0_2 ;pain1>hidden0_0 pain1>hidden0_1 pain1>hidden0_2 ; ... ;
+                pain0>hidden1_0 pain0>hidden1_1 pain0>hidden1_2 ;pain1>hidden1_0 pain1>hidden1_1 pain1>hidden1_2 ; ... ;
+                ...
+                hidden0_0>hidden1_0 hidden0_0>hidden1_1 hidden0_0>hidden1_2 ;hidden0_1>hidden1_0 hidden0_1>hidden1_1 ... ;
+                ...
+                hiddenN_0>out0 hiddenN_0>out1 hiddenN_0>out2 ;hiddenN_1>out0 hiddenN_1>out1 hiddenN_1>out2 ; ... ;
+
+        """
+
+        with open(path, "w") as f:
+            # Write the network parameters
+            f.write(f"{self.phaseDuration} {self.dt} {self.maxI} {self.waitTime}\n")
+            # Write the current spike shape
+            f.write(_list2str(self.ispikeshape)+"\n")
+            
+            # Write the structure shape
+            f.write(_list2str(self.structure)+"\n")
+            
+            
+            # now go through the input layer
+            line= "" # to hidden layer 0
+            
+            for neu in self.neurons[0]:
+                neuOutSyns = neu.outSyns
+               
+                
+                for syn in neuOutSyns:            
+                    line = line + str(syn.weight) + " "
+
+                # check if this is the last neuron
+                # add a semicolon to the strings
+                line = line + ";"
+            
+            # Now that we've constructed the inputs to pain and inputs to hidden layer 0 lines, write to file
+            f.write(line + "\n")
 
             # Now iterate through the pain neurons
             # Some math is going to need to be done here
@@ -405,7 +498,8 @@ class Network(object):
         rng.seed() # seed with current time, or other random seed from the OS
         
         # connect all the input neurons to the pain neurons
-        self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1])
+        # DEBUG: SEVER INPUT TO PAIN CONNECTIONS
+        #self.fillConnects(fromLayer=neurons[0], toLayer=neurons[1])
             
         
         if numHideLays > 0:
@@ -554,8 +648,8 @@ class Network(object):
         for lay in self.neurons:
             
             for neu in lay:
-                neu.adjustWeights(lr, dt=self.dt, pD=self.phaseDuration, iDur=self.waitTime)
-                # also tries to adjust the output weights but it shouldn't be a problem
+                if neu.type != _PAIN and neu.type != _OUTPUT:
+                    neu.adjustWeights(lr, dt=self.dt, pD=self.phaseDuration, iDur=self.waitTime)
             
             #for neu in lay:
             #   neu.adjustWeights(lr, dt=self.dt, pD=self.phaseDuration, iDur=self.waitTime) 
@@ -584,7 +678,7 @@ class Network(object):
 
 
 
-if __name__ == '__main__':
-    net = Network(structure=[1,2,3,4,5,6])
-    net.drawNetwork()
+#if __name__ == '__main__':
+#   net = Network(structure=[1,2,3,4,5,6])
+#   net.drawNetwork()
     
