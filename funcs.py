@@ -182,6 +182,7 @@ def actQuant(spikes : list,
                 any values greater than 1 will, for now, be saturated at 1
     """
     
+    return actQuant2(cur=cur) # DEBUG
     # maxSpikes = (endTime - startTime) / 10 # everything in units of ms
     maxSpikes = endTime/10
 

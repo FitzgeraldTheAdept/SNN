@@ -30,7 +30,7 @@ class Trainer(object):
         self.net = network      # neural network to train
 
         from environment import Environment
-        self.env = Environment(net=network, minFullOn = 0.6, maxFullOff=0.4)  # Environment to use for training
+        self.env = Environment(net=network, minFullOn = 0.9, maxFullOff=0.7)  # Environment to use for training
 
         self.dataPath = dataPath # path to training data
         self.lr = learnRate

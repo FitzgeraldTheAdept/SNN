@@ -600,15 +600,15 @@ class Network(object):
         
         self.simStep = 0 # reset
         scaled_Iin = list(np.asarray(I_in) * self.maxI)
-        
+        print(f"NETWORK: Scaled input currents are: {scaled_Iin}")
         if I_pain is not None:
             scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
-            print(f"NETWORK: Scaled pain currents are: {scaled_Ipain}")
+            #print(f"NETWORK: Scaled pain currents are: {scaled_Ipain}")
 
         if I_out is not None:
             scaled_Iout = list(np.asarray(I_out) * self.maxI)
             
-            #print(f"NETWORK: Scaled output currents are: {scaled_Iout}")
+            print(f"NETWORK: Scaled output currents are: {scaled_Iout}")
 
         while self.simStep < len(self.t):
 
@@ -617,23 +617,23 @@ class Network(object):
                 # input/pain current index tracker
                 i = 0
                 for neu in layer:
-                    if neu.type == 1:
+                    if neu.type == _INPUT:
                                                 
                         neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Iin[i])
                         
-                    elif neu.type == -1:
+                    elif neu.type == _PAIN:
                         # pain neuron
                         if I_pain is not None:
                             neu.step(simStep = self.simStep, dt = self.dt, I_in = scaled_Ipain[i])
                         else:
-                            neu.step(simStep = self.simStep, dt = self.dt)
+                            neu.step(simStep = self.simStep, dt = self.dt, I_in = None)
                         # Neurons will check synapses to find their other input current
-                    elif neu.type == 0 and I_out is not None:
+                    elif neu.type == _OUTPUT and I_out is not None:
                         # training- output currents applied
                         neu.step(simStep=self.simStep, dt=self.dt, I_in = scaled_Iout[i])
                     else:
                         # hidden layer neuron or output neuron out of training
-                        neu.step(simStep = self.simStep, dt = self.dt)
+                        neu.step(simStep = self.simStep, dt = self.dt, I_in = None)
                         # Neurons will check synapses to find their input current
                     i = i + 1
                     
@@ -691,15 +691,21 @@ class Network(object):
         plt.figure()
 
         neusPlots = list()
+        #iPlots = list()
         for neu in self.neurons[-1]:
             neusPlots.append(neu.v)
+        
+        #for neu in self.neurons[2]:
+        #    iPlots.append(neu.I)
 
-        for neuplt in neusPlots:
-            plt.plot(self.t, neuplt[0:-1])   
+        for i in range(0, len(neusPlots)):
+            plt.plot(self.t, neusPlots[i][0:-1])   
+            #plt.plot(self.t, iPlots[i][0:-1])
 
         names = list()
         for i in range(0, len(self.neurons[-1])):
             names.append(f"Out {i}")
+            #names.append(f"In {i} I")
         
         plt.legend(names)
         #plt.legend()

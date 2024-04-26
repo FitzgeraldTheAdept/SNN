@@ -192,7 +192,7 @@ class Controller(object):
                             print("Invalid pixel value.  Must be between 0 and 1")
 
                     # no pain input current, but pixel input current
-                    self.network.phase(I_in = pixels, I_pain = [0]*self.network.structure[1])
+                    self.network.phase(I_in = pixels, I_pain = None)
                     print("Network outputs are: ")
                     print(self.network.getOuts())
 

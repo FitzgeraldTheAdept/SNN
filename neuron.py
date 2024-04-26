@@ -31,6 +31,8 @@ class Neuron(object):
         self.u = self.params['b'] * self.v[0]
         self.type = type                # 0 = output, 1 = input, 2 = hidden, -1 = pain
         self.I = list()
+        self.I.append(0)
+        self.dir = 1                    # 1 if positive output, -1 if negative output (peripheral neurons only)
 
         self.mxI = mxI                     # maximum synapse current
 
@@ -51,14 +53,15 @@ class Neuron(object):
         totalI = 0
         for syn in self.inSyns:
             if syn.pre.type ==_PAIN:
-                totalI = totalI + 5*syn.step(simStep = simStep)
+                
+                totalI = totalI + syn.pre.dir * syn.step(simStep = simStep)
             else:
                 totalI = totalI + syn.step(simStep = simStep)
         
         return totalI
     
     """     Public Functions    """
-    def step(self, simStep : int, dt : float, I_in : float = 0):
+    def step(self, simStep : int, dt : float, I_in : float = None):
         """
             Time step for the neuron, update model variables
             Inputs: 
@@ -67,15 +70,27 @@ class Neuron(object):
                 I_in    = input current
         """
         
-        if self.type is _INPUT or self.type is _PAIN:
-            I = I_in
+        if self.type == _INPUT:
+            I = I_in*self.mxI
 
-        elif self.type is _OUTPUT and I_in !=0.0:
+        elif I_in is None and self.type == _PAIN:
+            I = 0
+
+        elif self.type == _PAIN:
+            if I_in < 0:
+                self.dir = -1
+                I = -1*I_in*self.mxI
+            else:
+                self.dir = 1
+                I = I_in * self.mxI
+
+        elif self.type == _OUTPUT and I_in is not None:
             # training
-            I = I_in
-
+            I = I_in * self.mxI
+            
         else:
             I = self._calcI(simStep = simStep, dt = dt) # Calculates injected current 
+            #print("Here2")
 
         # saturation check
         if I > self.mxI:
@@ -84,6 +99,8 @@ class Neuron(object):
         elif I < -self.mxI:
             I = -self.mxI
 
+        #I = self.mxI # DEBUG
+        
         vnow = self.v[simStep] # current membrane potential
         dv = (0.04 * pow(vnow,2) + 5 * vnow + 140 - self.u + I) * dt
         du = (self.params['a'] * (self.params['b']*vnow - self.u)) * dt
@@ -192,6 +209,7 @@ class Neuron(object):
         self.I = list()
         self.v.append(self.params['c']) # membrane potential in millivolts
         self.u = self.params['b'] * self.v[0]
+        self.I.append(0)
         
 
     def getAct(self, dt : float, pD : int, iDur : int):

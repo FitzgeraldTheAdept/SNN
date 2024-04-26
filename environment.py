@@ -136,10 +136,12 @@ class Environment(object):
         if maxAct < self.maxFullOff:
             # all outputs are suppressed.  Excite the network
             self.painIs[1] = 1*(1.0 - minAct)
+            self.painIs[0] = self.painIs[1]
             #print("ENV: All outputs suppressed") # DEBUG
         elif minAct > self.minFullOn:
             # all outputs are too excited.  Suppress the network
             self.painIs[1] = 1*(self.minFullOn - minAct)
+            self.painIs[0] = self.painIs[1]
             #print(f"ENV: All outputs excited. injecting: {self.painIs[0]}") # DEBUG
             
         if self.painIs[1] > 1:

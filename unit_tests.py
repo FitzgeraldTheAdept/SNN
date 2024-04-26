@@ -635,7 +635,9 @@ if __name__ == "__main__":
     #writeNet()
     #loadNet()
     #loadBigNet()
-    inferTest()
+    #inferTest()
+    neuCalcI()
+
     pass
 
 
