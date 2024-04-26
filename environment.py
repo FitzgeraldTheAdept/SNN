@@ -59,18 +59,11 @@ class Environment(object):
         #spikes = list(map(lambda x : x.spikes, self.outputs))
         # find the current for each output
         cur = list(map(lambda x : x.I, self.outputs))
-        
-        """
-        fn = lambda x : funcs.actQuant(spikes = x, 
-                                    dt=self.net.dt, 
-                                    endTime=self.net.phaseDuration,
-                                    startTime=self.stablePause)
-                                    """
-        fn = lambda x : funcs.actQuant2(cur=x)
-        
+
         # Evaluate activity of each neuron
         #activity =list(map(fn, spikes))
-        activity = list(map(fn, cur))
+        #activity = list(map(fn, cur))
+        activity = self.net.getOuts()
 
         ###### Evaluate against the truth ######
         self.ppCurrents(activity=activity)
@@ -116,6 +109,21 @@ class Environment(object):
         maxAct = np.max(activity)
         minAct = np.min(activity)
 
+        numEq = 0
+        for i in range(0, len(activity)):
+            if activity[i] == maxAct:
+                numEq = numEq + 1
+
+        if numEq > 1:
+            # multiple signals share the same max activity
+            # we want to punish this
+            self.painIs[0] = -0.5
+        if numEq == 1:
+            # only one signal is the strongest
+            # reward this regardless of whether it's correct
+            self.painIs[0] = 1
+
+
         difs = maxAct - np.asarray(activity)
         margin = 1.0
         # find the second smallest
@@ -123,37 +131,41 @@ class Environment(object):
             if activity[i] != maxAct and difs[i] <= margin:
                 margin = difs[i]
         
-        self.painIs[0] = 0
+        self.painIs[1] = 0
         # Now, for pp0: are all outputs off?
         if maxAct < self.maxFullOff:
             # all outputs are suppressed.  Excite the network
-            self.painIs[0] = 2*(1.0 - minAct)
+            self.painIs[1] = 1*(1.0 - minAct)
             #print("ENV: All outputs suppressed") # DEBUG
         elif minAct > self.minFullOn:
             # all outputs are too excited.  Suppress the network
-            self.painIs[0] = 20*(self.minFullOn - minAct)
+            self.painIs[1] = 1*(self.minFullOn - minAct)
             #print(f"ENV: All outputs excited. injecting: {self.painIs[0]}") # DEBUG
             
-        if self.painIs[0] > 1:
-            self.painIs[0] = 1.0
-        elif self.painIs[0] < -1:
-            self.painIs[0] = -1.0
-
-        # for pp1: is the correct output neuron highest?
-        if desiredOutAct < maxAct + .001 and desiredOutAct > maxAct - .001:
-            
-            self.painIs[1] = 50*margin
-            #print(f"ENV: Correct output highest. injecting: {self.painIs[1]}") # DEBUG
-
-        else:
-            # correct output is not the highest
-            
-            self.painIs[1] = -50*margin
-            #print(f"ENV: Correct Output NOT highest. injecting: {self.painIs[1]}") # DEBUG
-
         if self.painIs[1] > 1:
             self.painIs[1] = 1.0
         elif self.painIs[1] < -1:
             self.painIs[1] = -1.0
+
+        # Only start kicking this neuron in after network is quieted down
+        if self.painIs[1] > 0.2 or self.painIs[1] < -0.2:
+            self.painIs[2] = 0
+        else:
+            # for pp1: is the correct output neuron highest?
+            if desiredOutAct == maxAct and numEq == 1:
+                
+                self.painIs[2] = 5*margin
+                #print(f"ENV: Correct output highest. injecting: {self.painIs[1]}") # DEBUG
+
+            else:
+                # correct output is not the highest
+                
+                self.painIs[2] = -5*margin
+                #print(f"ENV: Correct Output NOT highest. injecting: {self.painIs[1]}") # DEBUG
+
+        if self.painIs[2] > 1:
+            self.painIs[2] = 1.0
+        elif self.painIs[2] < -1:
+            self.painIs[2] = -1.0
         
         

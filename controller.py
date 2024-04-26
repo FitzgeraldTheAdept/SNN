@@ -1,7 +1,7 @@
 _OPTIONS = ["Get <info> on the network", "<Load> a network", "<Build> a network",
             "<Write> the active network", "<Train> the active network", 
             "Run <infer>ence on the active network",
-            "See a <demo> of the active network", "<Exit>"]
+            "See a <demo> of the active network", "<Plot> most recent outputs", "<Exit>"]
 
 
 from trainer import Trainer
@@ -91,7 +91,7 @@ class Controller(object):
 
                     pD = 300
                     dt = 0.01
-                    maxI = 80
+                    maxI = 40
                     
                     try:
                         pD = int(input("Specify phase duration in ms (int): "))
@@ -164,7 +164,7 @@ class Controller(object):
                                 print(f"Not a valid number.  Please input an integer")
                         
                     if not endRoutine:
-                        trainerBot = Trainer(network=self.network, numGens=numGens, numEpochs = numEpochs)
+                        trainerBot = Trainer(network=self.network, numGens=numGens, numEpochs = numEpochs, learnRate = 0.2)
                         
                         print("Contstructed Trainer.  Beginning Training")
                         trainerBot.trainNetwork()
@@ -202,6 +202,8 @@ class Controller(object):
                     
                     print("Starting Validation")
                     self._valid()
+                elif choice == 7:
+                    self.network.plotOuts()
             elif choice == -100:
                 break
 
@@ -242,6 +244,8 @@ class Controller(object):
             return 5
         elif data.find("demo") != -1:
             return 6
+        elif data.find("plot") != -1:
+            return 7
         else:
             print(f"'{data}' command not recognized.\n")
             return -1
@@ -254,7 +258,7 @@ class Controller(object):
         """
 
         if self.network is not None:
-            options = [0, 1, 2, 3, 4, 5, 6]
+            options = [0, 1, 2, 3, 4, 5, 6, 7]
         else:
             options = [0, 1, 2]
             

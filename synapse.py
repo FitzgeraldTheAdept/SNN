@@ -1,7 +1,7 @@
 # This file contains the synapse class
 
 #maxI = 80   # maximum synapse current.  This gives a refractory period of ~4 ms
-maxI = 20
+maxI = 15
 import numpy as np
 # from neuron import Neuron
 import funcs
@@ -40,26 +40,37 @@ def hebbian1(syn : object, dt : float = 0.01, phaseDur : int = 300, ignoreDur : 
                      maxDelay=35)
     
     # Also calculate the activity of each neuron separately
-    """
-    act1 = funcs.actQuant2(spikes=preSpikes,
+    
+    act1 = funcs.actQuant(spikes=preSpikes,
+                          cur=syn.pre.I,
                         dt = dt, 
                         endTime= phaseDur, 
                         startTime = ignoreDur)
     
-    act2 = funcs.actQuant2(spikes=postSpikes,
+    act2 = funcs.actQuant(spikes=postSpikes,
+                          cur=syn.pre.I,
                         dt = dt, 
                         endTime= phaseDur, 
                         startTime = ignoreDur)
-    """
-    act1 = funcs.actQuant2(cur=syn.pre.I)
-    act2 = funcs.actQuant2(syn.pre.I)
+    
+    #act1 = funcs.actQuant2(cur=syn.pre.I)
+    #act2 = funcs.actQuant2(syn.pre.I)
     
     #maxAct = (phaseDur - ignoreDur)/4 # 4 ms
 
     # This is where hands are waved
     # See if either neurons was active enough
-    if act1 > 0.02 or act2 > 0.02:
+
+    if act1 > 0.2 or act2 > 0.2:
         actDif = act1 - act2 # activity difference
+
+        if actDif < 0.1 and actDif > -0.1:
+            # They're pretty close
+            hebCoef = 1
+
+        else:
+            hebCoef = -1
+        return hebCoef
 
         if actDif <= 0 and corr > 0.5:
             # Neuron 2 is more active than neuron 1
@@ -67,32 +78,36 @@ def hebbian1(syn : object, dt : float = 0.01, phaseDur : int = 300, ignoreDur : 
             # POSITIVE HEBBIAN COEFFICIENT
             # proportional to how strongly correlated they are
             # inversely proportional to activity of neuron 2 ?????
-            hebCoef = corr # / act2
+            #hebCoef = corr # / act2
+            hebCoef = 1
 
         elif actDif <= 0 and corr <= 0.5:
             # Neuron 2 is more active than neuron 1 
             # AND they have low correlation
             # NEGATIVE HEBBIAN COEFFICIENT
             #hebCoef = actDif
-            hebCoef = corr - 1
+            #hebCoef = corr - 1
+            hebCoef = -1
 
         elif actDif >= 0 and corr > 0.5:
             # Neuron 1 is more active than neuron 2
             # BUT they have a high correlation score
             # POSITIVE HEBBIAN COEFFICIENT
-            hebCoef = corr # / act1
+            #hebCoef = corr # / act1
+            hebCoef = 1
 
         elif actDif >= 0 and corr <= 0.5:
             # Neuron 1 is more active than neuron 2
             # AND they have a low correlation score
             # NEGATIVE HEBBIAN COEFFICIENT
             #hebCoef = -1 * actDif
-            hebCoef = corr - 1
+           # hebCoef = corr - 1
+            hebCoef = -1
         
         return hebCoef
 
     else:
-        return 0.0
+        return 0.0 # degradation over time
 
 class Synapse(object):
     
@@ -157,8 +172,7 @@ class Synapse(object):
         # Handle weight saturation
         if self.weight > maxI:
             self.weight = float(maxI)
-        if self.weight < -1*maxI: 
-            self.weight = float(-1*maxI)
-
+        if self.weight < 1:
+            self.weight = 1
         return self.weight
     

@@ -23,7 +23,7 @@ class Neuron(object):
     params['c'] = -65
     params['d'] = 8
     
-    def __init__(self, type : int, mxI : float = 80):
+    def __init__(self, type : int, mxI : float = 40):
         self.v = list()
         self.v.append(self.params['c']) # membrane potential in millivolts
         self.inSyns = list()             # input synapses
@@ -50,7 +50,10 @@ class Neuron(object):
         """
         totalI = 0
         for syn in self.inSyns:
-            totalI = totalI + syn.step(simStep = simStep)
+            if syn.pre.type ==_PAIN:
+                totalI = totalI + 5*syn.step(simStep = simStep)
+            else:
+                totalI = totalI + syn.step(simStep = simStep)
         
         return totalI
     
@@ -66,6 +69,11 @@ class Neuron(object):
         
         if self.type is _INPUT or self.type is _PAIN:
             I = I_in
+
+        elif self.type is _OUTPUT and I_in !=0.0:
+            # training
+            I = I_in
+
         else:
             I = self._calcI(simStep = simStep, dt = dt) # Calculates injected current 
 
@@ -92,8 +100,8 @@ class Neuron(object):
             if len(self.spikes) == 0:
                 self.spikes.append(simStep)
             
-            elif self.spikes[-1] < simStep - 4 / dt:
-                # Count only the first spike.  This is to combat model instability
+            elif self.spikes[-1] < simStep - 2 / dt:
+                # Count only the first spike in 2 ms  This is to combat model instability
                 self.spikes.append(simStep)
 
         # normalized current
@@ -133,11 +141,10 @@ class Neuron(object):
         
         if prePost == 0:
             # This neuron is the presynaptic
-            if weight == -256:
-                if self.type == _PAIN:
-                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight= 1.0 * self.mxI, ispike=ispike)
-                else:
-                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.5*random.random() + 0.25) * self.mxI, ispike=ispike)
+            if self.type == _PAIN:
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight= 1.0 * self.mxI, ispike=ispike)
+            elif weight == -256:
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.5*random.random() + 0.25) * self.mxI, ispike=ispike)
             else:
                 syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
 
@@ -147,11 +154,10 @@ class Neuron(object):
             toNeuron.regSynapse(syn=syn, IO = 1)
 
         elif prePost == 1:
-            if weight == -256:
-                if self.type == _PAIN:
-                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight= 1.0 * self.mxI, ispike=ispike)
-                else:
-                    syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.5*random.random() + 0.25) * self.mxI, ispike=ispike)
+            if self.type == _PAIN:
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight= 1.0 * self.mxI, ispike=ispike)
+            elif weight == -256:
+                syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=(0.5*random.random() + 0.25) * self.mxI, ispike=ispike)
             else:
                 syn = Synapse(preNeuron=self, postNeuron=toNeuron, weight=weight, ispike=ispike)
 
@@ -196,11 +202,12 @@ class Neuron(object):
                 pD      - phase duration
                 iDur    - ignore duration
         """
-        #return funcs.actQuant(spikes=self.spikes, 
-        #                        dt=dt,
-         #                       endTime=pD,
-         #                       startTime=iDur)
-        return funcs.actQuant2(cur=self.I)
+        return funcs.actQuant(spikes=self.spikes, 
+                              cur=self.I,
+                                dt=dt,
+                                endTime=pD,
+                                startTime=iDur)
+        #return funcs.actQuant2(cur=self.I)
 
 
 

@@ -21,7 +21,7 @@ class Trainer(object):
     def __init__(self, 
                  network : object, 
                  dataPath : str = "./data/", 
-                 learnRate : float = 0.01,
+                 learnRate : float = 1,
                  numGens : int = 20, # generations between testing epochs
                  numEpochs : int = 10, # number of testing epochs for the test
                  backupEpochs : int = 3, # number of epochs after which to save a copy of the network as is
@@ -30,7 +30,7 @@ class Trainer(object):
         self.net = network      # neural network to train
 
         from environment import Environment
-        self.env = Environment(net=network, minFullOn = 0.8, maxFullOff=0.2)  # Environment to use for training
+        self.env = Environment(net=network, minFullOn = 0.6, maxFullOff=0.4)  # Environment to use for training
 
         self.dataPath = dataPath # path to training data
         self.lr = learnRate
@@ -127,13 +127,16 @@ class Trainer(object):
         # apply input signal, initial propagation
         self.net.phase(I_in=img)
         
-        print(f"TRAINER: Outputs are : {self.net.getOuts()}")
+        #print(f"TRAINER: Outputs are : {self.net.getOuts()}")
         # apply to environment, get the pain currents
         pain_Is = self.env.evalOutput()
         #print(f"TRAINER: Pain Currents are: {pain_Is}") # DEBUG
+        
+        out_Is = [0.0, 0.0, 0.0]
+        out_Is[truthType] = 1.0
 
         # Repropagate with pain neurons
-        self.net.phase(I_in=img, I_pain = pain_Is)
+        self.net.phase(I_in=img, I_pain = pain_Is, I_out = out_Is)
 
         # Adjust weights
         self.net.adjustWeights(lr = self.lr)

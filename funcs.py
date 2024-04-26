@@ -109,8 +109,8 @@ def actCompare(cur1 : list,
     """
 
     # Quantify the activity of the first spiking signal
-    #act1 = actQuant1(spikes=spikes1, dt = dt, endTime = endTime, startTime = startTime)
-    act1 = actQuant2(cur=cur1)
+    act1 = actQuant(spikes=spikes1, cur =cur1, dt = dt, endTime = endTime, startTime = startTime)
+    #act1 = actQuant2(cur=cur1)
 
     # Get the timing difference from spikes1 -> spikes2
     timeDifs = timeComp(spikes1 = spikes1, spikes2 = spikes2, dt = dt, startTime= startTime)
@@ -130,7 +130,9 @@ def actCompare(cur1 : list,
     # print(numCaused) #DEBUG
     # now, we've calculated how many spikes in spikes2 could have been caused by spikes in spikes1
     # Calculate the causal activation value of spikes 2
-    maxSpikes = (endTime - startTime) / 4 # everything in units of ms
+    #maxSpikes = (endTime - startTime) / 10 # everything in units of ms
+    #maxSpikes = 30
+    maxSpikes = endTime / 10
     if act1 == 0:
         return 0
     else:
@@ -157,9 +159,11 @@ def actQuant2(cur : list)-> float:
     """
         Calclate activation based on average current, NOT counting voltage spikes
     """
+    
     return np.mean(cur)
 
-def actQuant(spikes : list, 
+def actQuant(spikes : list,
+             cur: list, 
              dt : float = 0.01, 
              endTime : int = 100, 
              startTime : int = 20) -> float:
@@ -178,7 +182,8 @@ def actQuant(spikes : list,
                 any values greater than 1 will, for now, be saturated at 1
     """
     
-    maxSpikes = (endTime - startTime) / 4 # everything in units of ms
+    # maxSpikes = (endTime - startTime) / 10 # everything in units of ms
+    maxSpikes = endTime/10
 
     
     # Count the spikes to quantify activation

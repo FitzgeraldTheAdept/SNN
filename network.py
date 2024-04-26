@@ -64,7 +64,7 @@ class Network(object):
                  dt : float = 0.1, 
                  structure : list = [2, 1, 1], 
                  simStep : int = 0,
-                 maxI : float = 80,
+                 maxI : float = 40,
                  waitTime = 20):
         
         if path is None:
@@ -584,14 +584,14 @@ class Network(object):
         for i in self.neurons:
             print(self.structure)
 
-    def phase(self, I_in : list, I_pain : list = None):
+    def phase(self, I_in : list, I_pain : list = None, I_out : list = None):
         """
             Execute a phase (or a propagation).  
             In other words, solve the whole network for every simstep
             Inputs:
                 I_in - currents derived from the input strength, list of floats
                 I_pain - currents to the pain neurons
-
+                I_out - currents to the output neurons
         """
         # reset all the neurons
         for layer in self.neurons:
@@ -604,6 +604,11 @@ class Network(object):
         if I_pain is not None:
             scaled_Ipain = list(np.asarray(I_pain) * self.maxI)
             print(f"NETWORK: Scaled pain currents are: {scaled_Ipain}")
+
+        if I_out is not None:
+            scaled_Iout = list(np.asarray(I_out) * self.maxI)
+            
+            #print(f"NETWORK: Scaled output currents are: {scaled_Iout}")
 
         while self.simStep < len(self.t):
 
@@ -623,8 +628,11 @@ class Network(object):
                         else:
                             neu.step(simStep = self.simStep, dt = self.dt)
                         # Neurons will check synapses to find their other input current
+                    elif neu.type == 0 and I_out is not None:
+                        # training- output currents applied
+                        neu.step(simStep=self.simStep, dt=self.dt, I_in = scaled_Iout[i])
                     else:
-                        # other neuron
+                        # hidden layer neuron or output neuron out of training
                         neu.step(simStep = self.simStep, dt = self.dt)
                         # Neurons will check synapses to find their input current
                     i = i + 1
@@ -632,7 +640,7 @@ class Network(object):
             
             # increment to next simulation step
             self.simStep = self.simStep + 1
-              
+        print(f"NETWORK: outputs are: {self.getOuts()}")
         
 
     def adjustWeights(self, lr : float):
@@ -677,6 +685,26 @@ class Network(object):
             return None
 
 
+    def plotOuts(self):
+        # For debugging
+        import matplotlib.pyplot as plt
+        plt.figure()
+
+        neusPlots = list()
+        for neu in self.neurons[-1]:
+            neusPlots.append(neu.v)
+
+        for neuplt in neusPlots:
+            plt.plot(self.t, neuplt[0:-1])   
+
+        names = list()
+        for i in range(0, len(self.neurons[-1])):
+            names.append(f"Out {i}")
+        
+        plt.legend(names)
+        #plt.legend()
+        plt.show()
+        
 
 #if __name__ == '__main__':
 #   net = Network(structure=[1,2,3,4,5,6])
