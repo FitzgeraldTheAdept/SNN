@@ -49,20 +49,15 @@ class Controller(object):
             print(_OPTIONS[-1])
             
             # collect user input
-            choice = self._condInput(input(">>"))
+            (choice, arg) = self._condInput(input(">>"))
             
             if choice >= 0:
                 
                 if choice > len(opts):
                     print("Option Not available.  Please <load> a network first.")
                 elif choice == 0:
-                    # get info
-                    if self.network is None:
-                        print("Made by Benjamin Wittrup\n" + 
-                                "April 26, 2024")
-                    else:
-                        self.network.dumpInfo()
-                    input("Press enter to continue.")
+                    # Get Info
+                    self._getInfo(arg)
                 elif choice == 1:
                     print("Loading a Network")
                     self.path = input("Please specify file name and path, NOT including the .net extension: ")
@@ -73,52 +68,8 @@ class Controller(object):
                         print(f"Could not locate file {self.path}.net")
 
                 elif choice == 2:
-                    print("Buidling a network.")
-                    structure = list()
-                    try:
-                        structure.append(int(input("Specify # inputs: ")))
-                    except Exception as e:
-                        pass
-                    structure.append(int(input("Specify # pain Neurons: ")))
-                    structure.append(int(input("Specify # Outputs: ")))
-                    ans = 1
-                    while ans > 0:
-                        try:
-                            ans = int(input("Specify # Neurons in next hidden layer: "))
-                            structure.append(ans)
-                        except Exception as e:
-                            ans = -100
-
-                    pD = 300
-                    dt = 0.01
-                    maxI = 40
-                    
-                    try:
-                        pD = int(input("Specify phase duration in ms (int): "))
-                    except Exception as e:
-                        print(f"Default value of {pD} ms will be used.")
-                        
-                    try:
-                        dt = float(input("Specify time step, dt in ms (float): "))
-                    except Exception as e:
-                        print(f"Default value of {dt} will be used.")
-
-                    try:
-                        maxI = float(input("Specify Maximum Current Amplitude: "))
-                    except Exception as e:
-                        print(f"Default value of {maxI} will be used.")
-
-                    # Build the network now
-                    self.network = Network(structure=structure, 
-                                           phaseDuration = pD,
-                                           dt=dt,
-                                           maxI = maxI)
-                    
-                    print("Network Built Successfully.")
-                    input("Please press Enter to Continue.")
-                    print("\n\n")
-
-
+                    # Build Network
+                    self._buildNet()
                 elif choice == 3:
                     print("Writing the network to file")
                     self.toPath = input("Please specify file name and path, NOT including the .net extension: ")
@@ -208,7 +159,7 @@ class Controller(object):
                 break
 
         
-    def _condInput(self, data : str):
+    def _condInput(self, data : str) -> tuple:
         """
             Conditions user input
             INPUTS:
@@ -222,33 +173,40 @@ class Controller(object):
                 train the active network  (4)
                 run inference on the active network (5)
                 see a demo of the active network (6)
+                plot the outputs of the last simulation (7)
                 exit (-100)
 
                 returns -1 if value was invalid
         """
         data = data.lower()
+        args = data.split(' ')
+        if len(args) > 1:
+            arg = args[1]
+
+        else:
+            arg = ' '
 
         if data.find("exit") != -1 or data.find("end") != -1:
             return -100
         elif data.find("info") != -1:
-            return 0
+            return (0,arg)
         elif data.find("load") != -1:
-            return 1
+            return (1, arg)
         elif data.find("build") != -1:
-            return 2
+            return (2, arg)
         elif data.find("write") != -1 or data.find("save") != -1:
-            return 3
+            return (3, arg)
         elif data.find("train") != -1:
-            return 4
+            return (4, arg)
         elif data.find("infer") != -1 or data.find("test") != -1:
-            return 5
+            return (5, arg)
         elif data.find("demo") != -1:
-            return 6
+            return (6, arg)
         elif data.find("plot") != -1:
-            return 7
+            return (7, arg)
         else:
             print(f"'{data}' command not recognized.\n")
-            return -1
+            return (-1, ' ')
             
 
     def _getOptions(self) -> list:
@@ -307,7 +265,113 @@ class Controller(object):
         
         plt.show()
 
+    def _getInfo(self, arg : str):
+        """
+            Code for get info option
+        """
+        # get info
+        if self.network is None and arg == ' ':
+            print("Made by Benjamin Wittrup\n" + 
+                    "  April 26, 2024  ")
+        elif self.network is not None and arg == ' ':
+            print(f"###########{self.path}###########")
+            self.network.dumpInfo()
+        
+        else: 
+            # No network loaded.
+            #print("Loading a Network")
+            tempPath = arg
+            try:
+                tempNet = Network(tempPath + ".net")
+                print(f"Network {tempPath} retrieved from file.")
+                print(f"###########{tempPath}###########")
+                tempNet.dumpInfo()
+                opt = input(f"Would you like to switch the active network to {tempPath}? (y/n) ")
+                if opt.find("y") != -1:
+                    self.network = tempNet
+                    self.path = tempPath
+                    print(f"Network {self.path} is now active.")
+
+            except FileNotFoundError as e:
+                print(f"Could not locate file {tempPath}.net")
+
+        
+        input("\nPress enter to continue.")
+
     
+    def _buildNet(self):
+        print("Building a network.")
+        structure = list()
+        structure.append(self._loopUntil(castTo=int, prompt="Specify # Inputs: "))
+        if structure[-1] == -100:
+            # Exit value
+            return
+        structure.append(self._loopUntil(castTo=int, prompt="Specify # Feedback Neurons: "))
+        if structure[-1] == -100:
+            # Exit value
+            return
+        structure.append(self._loopUntil(castTo=int, prompt="Specify # Outputs: "))
+        if structure[-1] == -100:
+            # Exit value
+            return
+        
+        ans = 1
+        while ans > 0:
+            try:
+                ans = int(input("Specify # Neurons in next hidden layer: "))
+                structure.append(ans)
+            except Exception as e:
+                ans = -100
+
+        pD = 300
+        dt = 0.01
+        maxI = 40
+        
+        try:
+            pD = int(input("Specify phase duration in ms (int): "))
+        except Exception as e:
+            print(f"Default value of {pD} ms will be used.")
+            
+        try:
+            dt = float(input("Specify time step, dt in ms (float): "))
+        except Exception as e:
+            print(f"Default value of {dt} will be used.")
+
+        try:
+            maxI = float(input("Specify Maximum Current Amplitude: "))
+        except Exception as e:
+            print(f"Default value of {maxI} will be used.")
+
+        # Build the network now
+        self.network = Network(structure=structure, 
+                                phaseDuration = pD,
+                                dt=dt,
+                                maxI = maxI)
+        
+        print("Network Built Successfully.")
+        input("Please press Enter to Continue.")
+        print("\n\n")
+
+    def _loopUntil(self, castTo : type, prompt : str):
+        """
+            Handles input looping to condition user input until it can be successfully casted to the type castTo
+        """
+        leave = 0
+        while leave == 0:
+            userInput = input(prompt)
+            if userInput.find("exit") != -1 or userInput.find("end") != -1:
+                # Error/exit value
+                return -100
+            
+            else:
+                try:
+                    val = castTo(userInput)
+                    leave = 1
+                except ValueError as e:
+                    print(f"Could not interpret {userInput} as {castTo}.")
+        
+        return val
+
 
 if __name__ == "__main__":
     Controller()

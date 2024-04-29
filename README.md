@@ -1,6 +1,14 @@
 # SNN
 Spiking Neural Network Project for EE5800 Neuromorphic Robotic Systems
 
+
+## Instructions
+
+Run 
+``` 
+controller.py
+```
+
 ## RECOMMENDATIONS
 
 Needed nonlinear synapse weight adjustment
@@ -10,6 +18,7 @@ Needed nonlinear synapse weight adjustment
 - rather than amplifying pain current directly, utilize multiple pain neurons with similar rules
 - Evaluate output currents, not current to the outputs
 - Train with a null case
+- Make the feedback neurons make already active neurons more active, and less active neurons less active.
 
 ## Observations
 - synapses weights tended to saturate either max or min
