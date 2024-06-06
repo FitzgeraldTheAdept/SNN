@@ -2,6 +2,8 @@
 # Adapted From: Izhikevich, Eugene M. "Simple model of spiking neurons." 
 # IEEE Transactions on neural networks 14.6 (2003): 1569-1572
 
+# Model changed to 
+
 from math import pow
 import random
 import funcs

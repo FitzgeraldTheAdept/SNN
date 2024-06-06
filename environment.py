@@ -1,9 +1,9 @@
 """
+    DEPRECATED
     Contains the Environment functions for the system
     
 """
 from network import Network
-import funcs
 import numpy as np
 
 class Environment(object):

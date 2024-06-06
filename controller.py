@@ -187,7 +187,7 @@ class Controller(object):
             arg = ' '
 
         if data.find("exit") != -1 or data.find("end") != -1:
-            return -100
+            return (-100, ' ')
         elif data.find("info") != -1:
             return (0,arg)
         elif data.find("load") != -1:
@@ -282,7 +282,7 @@ class Controller(object):
             #print("Loading a Network")
             tempPath = arg
             try:
-                tempNet = Network(tempPath + ".net")
+                tempNet = Network("nets/" + tempPath + ".net")
                 print(f"Network {tempPath} retrieved from file.")
                 print(f"###########{tempPath}###########")
                 tempNet.dumpInfo()

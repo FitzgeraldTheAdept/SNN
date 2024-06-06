@@ -1,5 +1,6 @@
 # SNN
-Spiking Neural Network Project for EE5800 Neuromorphic Robotic Systems
+Spiking Neural Network 
+Benjamin Wittrup
 
 
 ## Instructions
@@ -8,6 +9,9 @@ Run
 ``` 
 controller.py
 ```
+
+## TODO:
+Switch Neuron Model to correlate input current to membrane potential, determine if the neuron is active (threshold voltage) and how active it is based off of input current.
 
 ## RECOMMENDATIONS
 
