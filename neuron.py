@@ -31,10 +31,10 @@ class Neuron(object):
     model['reset'] = -80 # reset value
     model['thresh'] = 30 # threshold value to reset at
     model['rest'] = -65 # resting voltage/charge
-    model['pass_loss'] = 0.5 # passive loss when above rest value
-    model['pass_gain'] = 0.5 # passive gain when below rest value
+    model['pass_loss'] = (model['thresh'] - model['reset'])/4 # passive loss when above rest value
+    model['pass_gain'] = model['pass_loss'] # passive gain when below rest value
     
-    def __init__(self, type : int, mxI : float = 2.75):
+    def __init__(self, type : int, mxI : float = 27.5):
         self.v = list()
         self.v.append(self.model['rest'])   # nominal membrane potential in millivolts
         self.inSyns = list()                # input synapses
@@ -120,12 +120,12 @@ class Neuron(object):
             # record spike time
             self.spikes.append(simStep)
             
-        elif vnow < self.model['rest'] - self.model['pass_gain']:
+        elif vnow < (self.model['rest'] - self.model['pass_gain'] * dt):
             # include passive gain
-            self.v.append(vnow + dq + self.model['pass_gain'])
-        elif vnow > self.model['rest'] + self.model['pass_gain']:
+            self.v.append(vnow + dq + self.model['pass_gain'] * dt)
+        elif vnow > (self.model['rest'] + self.model['pass_gain'] * dt):
             # include passive loss
-            self.v.append(vnow + dq - self.model['pass_loss'])
+            self.v.append(vnow + dq - self.model['pass_loss'] * dt)
             
         elif dq < dt*self.mxI*0.01:
             # vnow is practically v_rest, and change in current is minimal
