@@ -47,7 +47,8 @@ class Network(object):
     """
         Overall Network Object
 
-        Fields:
+        Properties:
+        path            - string, path to network (.net) file
         phaseDuration   - time in ms that each phase (prop, pain, etc.) lasts
         dt              - simulation time step dt (in ms)
         structure       - list containing number of neurons in each layer of the network.
@@ -56,15 +57,16 @@ class Network(object):
         simStep         - Simulation step (which time index in vector t are we)
         neurons         - 2D list of Neuron objects [inputs, pain, hl1, hl2, ..., output]
         maxI            - maximum current from a single synapse. Also max synapse weight
-        weightTime      - time to let network settle before finding activities
+        waitTime        - time to let network settle before finding activities
+        ispikeshape     - list.  Current spike response curve shape
     """
     def __init__(self, 
                  path : str = None,
                  phaseDuration : int = 100, 
-                 dt : float = 0.1, 
+                 dt : float = 0.1, # in ms
                  structure : list = [2, 1, 1], 
                  simStep : int = 0,
-                 maxI : float = 40,
+                 maxI : float = 27.5, # dv = dt * I + passive gain/loss.  maxI = (v_thresh_mV - v_reset_mV)/(4 ms * dt)
                  waitTime = 20):
         
         if path is None:
@@ -79,7 +81,7 @@ class Network(object):
             self.ispikeshape = ispikeTotal['current']
             self.maxI = maxI
 
-            self.t             = list(map(lambda x: x * self.dt, range(0, int(self.phaseDuration / self.dt) + 1,1)))
+            self.t             = list(map(lambda x: x * self.dt, range(0, int(self.phaseDuration / self.dt) + 1, 1)))
             self.simStep       = simStep
             self.neurons       = self.buildNetwork(self.structure)
 

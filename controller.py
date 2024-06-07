@@ -325,7 +325,7 @@ class Controller(object):
 
         pD = 300
         dt = 0.01
-        maxI = 40
+        maxI = (110/(4 * dt))  # (v_thresh - v_reset) / (4 ms / dt)
         
         try:
             pD = int(input("Specify phase duration in ms (int): "))
